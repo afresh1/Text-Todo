@@ -1,103 +1,117 @@
-package Text::Todo;
+package Text::Todo::Entry;
 
-# $RedRiver: Todo.pm,v 1.1.1.1 2009/07/09 18:21:34 andrew Exp $
+# $RedRiver$
 
 use warnings;
 use strict;
 use Carp;
 
 use Class::Std::Utils;
-use Text::Todo::Entry;
+use List::Util qw/ first /;
 
 use version; our $VERSION = qv('0.0.1');
 
 {
+    my %text_of;
 
-    my %file_of;
-    my %list_of;
+    my %contexts_of;
+    my %projects_of;
+    my %priority_of;
 
     sub new {
-        my ( $class, $file ) = @_;
+        my ( $class, $text ) = @_;
 
         my $self = bless anon_scalar(), $class;
         my $ident = ident($self);
 
-        $file_of{$ident} = $file;
-
-        if ($file) {
-            $self->load;
-        }
+        $self->_update_entry($text);
 
         return $self;
     }
 
-    sub load {
-        my ( $self, $file ) = @_;
+    sub _update_entry {
+        my ( $self, $text ) = @_;
         my $ident = ident($self);
 
-        if ($file) {
-            $file_of{$ident} = $file;
-        }
-        else {
-            $file = $file_of{$ident};
-        }
+        $text = defined $text ? $text : q{};
 
-        croak 'load requires a filename' if !$file;
+        $text_of{$ident} = $text;
 
-        my @list;
-        open my $fh, '<', $file or croak "Couldn't open [$file]: $!";
-        while (<$fh>) {
-            s/\r?\n$//xms;
-            push @list, Text::Todo::Entry->new($_);
-        }
-        close $fh or croak "Couldn't close [$file]: $!";
-        $list_of{$ident} = \@list;
+        %{ $contexts_of{$ident} } = map { $_ => q{} } $text =~ /\@ (\S+)/gxms;
+        %{ $projects_of{$ident} } = map { $_ => q{} } $text =~ /\+ (\S+)/gxms;
+        ( $priority_of{$ident} ) = $text =~ /\( ([A-Z]) \)/ixms;
 
         return 1;
     }
 
-    sub save {
-        my ( $self, $file ) = @_;
+    sub text {
+        my ($self) = @_;
         my $ident = ident($self);
 
-        if ($file) {
-            $file_of{$ident} = $file;
-        }
-        else {
-            $file = $file_of{$ident};
-        }
-
-        croak 'save requires a filename' if !$file;
-
-        open my $fh, '>', $file or croak "Couldn't open [$file]: $!";
-        foreach my $e ( @{ $list_of{$ident} } ) {
-            print $e->text . "\n" or croak "Couldn't print to [$file]: $!";
-        }
-        close $fh or croak "Couldn't close [$file]: $!";
-
-        return 1;
+        return $text_of{$ident};
     }
 
-    sub list {
-        my ($self) = shift;
+    sub contexts {
+        my ($self) = @_;
         my $ident = ident($self);
-        return if !$list_of{$ident};
 
-        return $list_of{$ident};
+        return sort keys %{ $contexts_of{$ident} };
+    }
 
-        #my $id = 1;
-        #my @l;
-        #foreach my $e ( @{ $list_of{$ident} } ) {
-        #    push @l, $e; #{ %{$e}, id => $id };
-        #    $id++;
-        #}
-        #
-        #my @list = sort { $a->priority cmp $b->priority }
-        #    grep { defined $_->priority } @l;
-        #
-        #push @list, grep { !defined $_->priority } @l;
-        #
-        #return \@list;
+    sub in_context {
+        my ( $self, $context ) = @_;
+        return $self->_is_in( $context, 'contexts' );
+    }
+
+    sub projects {
+        my ($self) = @_;
+        my $ident = ident($self);
+
+        return sort keys %{ $projects_of{$ident} };
+    }
+
+    sub in_project {
+        my ( $self, $project ) = @_;
+        return $self->_is_in( $project, 'projects' );
+    }
+
+    sub priority {
+        my ($self) = @_;
+        my $ident = ident($self);
+
+        return $priority_of{$ident};
+    }
+
+    sub _is_in {
+        my ( $self, $item, $type ) = @_;
+        my $ident = ident($self);
+
+        return defined first { $_ eq $item } $self->$type;
+    }
+
+    sub change {
+        my ( $self, $text ) = @_;
+        return $self->_update_entry($text);
+    }
+
+    sub prepend {
+        my ( $self, $addition ) = @_;
+
+        my $new = $self->text;
+
+        if ( my $priority = $self->priority ) {
+            $new =~ s/^( \s* \( $priority \))/$1 $addition/xms;
+        }
+        else {
+            $new = join q{ }, $addition, $new;
+        }
+
+        return $self->change($new);
+    }
+
+    sub append {
+        my ( $self, $addition ) = @_;
+        return $self->change( join q{ }, $self->text, $addition );
     }
 
 }
@@ -107,17 +121,17 @@ __END__
 
 =head1 NAME
 
-Text::Todo - [One line description of module's purpose here]
+Text::Todo::Entry - [One line description of module's purpose here]
 
 
 =head1 VERSION
 
-This document describes Text::Todo version 0.0.1
+This document describes Text::Todo::Entry version 0.0.1
 
 
 =head1 SYNOPSIS
 
-    use Text::Todo;
+    use Text::Todo::Entry;
 
 =for author to fill in:
     Brief code example(s) here showing commonest usage(s).
@@ -142,11 +156,24 @@ This document describes Text::Todo version 0.0.1
 
 =head2 new
 
-=head2 load
+=head2 text
 
-=head2 save
+=head2 priority
 
-=head2 list
+=head2 contexts
+
+=head2 in_context
+
+=head2 projects
+
+=head2 in_project
+
+=head2 change
+
+=head2 prepend
+
+=head2 append
+
 
 =head1 DIAGNOSTICS
 
@@ -180,7 +207,7 @@ This document describes Text::Todo version 0.0.1
     that can be set. These descriptions must also include details of any
     configuration language used.
   
-Text::Todo requires no configuration files or environment variables.
+Text::Todo::Entry requires no configuration files or environment variables.
 
 
 =head1 DEPENDENCIES
