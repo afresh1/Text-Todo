@@ -1,6 +1,6 @@
 package Text::Todo::Entry;
 
-# $RedRiver: Entry.pm,v 1.1 2009/07/10 22:26:14 andrew Exp $
+# $RedRiver: Entry.pm,v 1.2 2009/07/10 22:28:28 andrew Exp $
 
 use warnings;
 use strict;
@@ -14,9 +14,13 @@ use version; our $VERSION = qv('0.0.1');
 {
     my %text_of;
 
-    my %contexts_of;
-    my %projects_of;
+    my %tags_of;
     my %priority_of;
+
+    my %tags = (
+        context => q{@},
+        project => q{+},
+    );
 
     sub new {
         my ( $class, $text ) = @_;
@@ -37,11 +41,29 @@ use version; our $VERSION = qv('0.0.1');
 
         $text_of{$ident} = $text;
 
-        %{ $contexts_of{$ident} } = map { $_ => q{} } $text =~ /\@ (\S+)/gxms;
-        %{ $projects_of{$ident} } = map { $_ => q{} } $text =~ /\+ (\S+)/gxms;
+        foreach my $tag ( keys %tags ) {
+            my $symbol = quotemeta $tags{$tag};
+            $tags_of{$ident}{$tag}
+                = { map { $_ => q{} } $text =~ / $symbol  (\S+)/gxms };
+        }
         ( $priority_of{$ident} ) = $text =~ /\( ([A-Z]) \)/ixms;
 
         return 1;
+    }
+
+    sub _tags {
+        my ( $self, $tag ) = @_;
+        my $ident = ident($self);
+
+        my @tags = sort keys %{ $tags_of{$ident}{$tag} };
+        return wantarray ? @tags : \@tags;
+    }
+
+    sub _is_in {
+        my ( $self, $type, $item ) = @_;
+        my $ident = ident($self);
+
+        return defined first { $_ eq $item } $self->$type;
     }
 
     sub text {
@@ -51,32 +73,6 @@ use version; our $VERSION = qv('0.0.1');
         return $text_of{$ident};
     }
 
-    sub contexts {
-        my ($self) = @_;
-        my $ident = ident($self);
-
-        my @contexts = sort keys %{ $contexts_of{$ident} };
-        return wantarray ? @contexts : \@contexts;
-    }
-
-    sub in_context {
-        my ( $self, $context ) = @_;
-        return $self->_is_in( $context, 'contexts' );
-    }
-
-    sub projects {
-        my ($self) = @_;
-        my $ident = ident($self);
-
-        my @projects = sort keys %{ $projects_of{$ident} };
-        return wantarray ? @projects : \@projects;
-    }
-
-    sub in_project {
-        my ( $self, $project ) = @_;
-        return $self->_is_in( $project, 'projects' );
-    }
-
     sub priority {
         my ($self) = @_;
         my $ident = ident($self);
@@ -84,11 +80,17 @@ use version; our $VERSION = qv('0.0.1');
         return $priority_of{$ident};
     }
 
-    sub _is_in {
-        my ( $self, $item, $type ) = @_;
-        my $ident = ident($self);
+    sub contexts { my ($self) = @_; return $self->_tags('context') }
+    sub projects { my ($self) = @_; return $self->_tags('project') }
 
-        return defined first { $_ eq $item } $self->$type;
+    sub in_context {
+        my ( $self, $context ) = @_;
+        return $self->_is_in( 'contexts', $context );
+    }
+
+    sub in_project {
+        my ( $self, $project ) = @_;
+        return $self->_is_in( 'projects', $project );
     }
 
     sub change {
