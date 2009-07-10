@@ -1,6 +1,6 @@
 package Text::Todo::Entry;
 
-# $RedRiver$
+# $RedRiver: Entry.pm,v 1.1 2009/07/10 22:26:14 andrew Exp $
 
 use warnings;
 use strict;
@@ -55,7 +55,8 @@ use version; our $VERSION = qv('0.0.1');
         my ($self) = @_;
         my $ident = ident($self);
 
-        return sort keys %{ $contexts_of{$ident} };
+        my @contexts = sort keys %{ $contexts_of{$ident} };
+        return wantarray ? @contexts : \@contexts;
     }
 
     sub in_context {
@@ -67,7 +68,8 @@ use version; our $VERSION = qv('0.0.1');
         my ($self) = @_;
         my $ident = ident($self);
 
-        return sort keys %{ $projects_of{$ident} };
+        my @projects = sort keys %{ $projects_of{$ident} };
+        return wantarray ? @projects : \@projects;
     }
 
     sub in_project {
