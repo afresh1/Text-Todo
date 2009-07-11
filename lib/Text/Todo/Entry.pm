@@ -1,6 +1,6 @@
 package Text::Todo::Entry;
 
-# $RedRiver: Entry.pm,v 1.3 2009/07/10 22:52:08 andrew Exp $
+# $RedRiver: Entry.pm,v 1.4 2009/07/11 15:58:50 andrew Exp $
 
 use warnings;
 use strict;
@@ -76,10 +76,8 @@ use version; our $VERSION = qv('0.0.1');
     }
 
     sub _is_in {
-        my ( $self, $type, $item ) = @_;
-        my $ident = ident($self);
-
-        return defined first { $_ eq $item } $self->$type;
+        my ( $self, $tags, $item ) = @_;
+        return defined first { $_ eq $item } $self->$tags;
     }
 
     sub text {
