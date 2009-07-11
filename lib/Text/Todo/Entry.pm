@@ -1,6 +1,6 @@
 package Text::Todo::Entry;
 
-# $RedRiver: Entry.pm,v 1.2 2009/07/10 22:28:28 andrew Exp $
+# $RedRiver: Entry.pm,v 1.3 2009/07/10 22:52:08 andrew Exp $
 
 use warnings;
 use strict;
@@ -21,6 +21,22 @@ use version; our $VERSION = qv('0.0.1');
         context => q{@},
         project => q{+},
     );
+
+    for my $tag ( keys %tags ) {
+        ## no critic strict
+        no strict 'refs';    # Violates use strict, but allows code generation
+        ## use critic
+
+        *{ $tag . 's' } = sub {
+            my ($self) = @_;
+            return $self->_tags($tag);
+        };
+
+        *{ 'in_' . $tag } = sub {
+            my ( $self, $item ) = @_;
+            return $self->_is_in( $tag . 's', $item );
+        };
+    }
 
     sub new {
         my ( $class, $text ) = @_;
@@ -46,7 +62,7 @@ use version; our $VERSION = qv('0.0.1');
             $tags_of{$ident}{$tag}
                 = { map { $_ => q{} } $text =~ / $symbol  (\S+)/gxms };
         }
-        ( $priority_of{$ident} ) = $text =~ /\( ([A-Z]) \)/ixms;
+        ( $priority_of{$ident} ) = $text =~ /^ \s* \( ([A-Z]) \)/ixms;
 
         return 1;
     }
@@ -78,19 +94,6 @@ use version; our $VERSION = qv('0.0.1');
         my $ident = ident($self);
 
         return $priority_of{$ident};
-    }
-
-    sub contexts { my ($self) = @_; return $self->_tags('context') }
-    sub projects { my ($self) = @_; return $self->_tags('project') }
-
-    sub in_context {
-        my ( $self, $context ) = @_;
-        return $self->_is_in( 'contexts', $context );
-    }
-
-    sub in_project {
-        my ( $self, $project ) = @_;
-        return $self->_is_in( 'projects', $project );
     }
 
     sub change {
