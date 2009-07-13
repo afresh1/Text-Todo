@@ -1,6 +1,6 @@
 package Text::Todo::Entry;
 
-# $RedRiver: Entry.pm,v 1.4 2009/07/11 15:58:50 andrew Exp $
+# $RedRiver: Entry.pm,v 1.5 2009/07/11 16:02:18 andrew Exp $
 
 use warnings;
 use strict;
@@ -59,8 +59,8 @@ use version; our $VERSION = qv('0.0.1');
 
         foreach my $tag ( keys %tags ) {
             my $symbol = quotemeta $tags{$tag};
-            $tags_of{$ident}{$tag}
-                = { map { $_ => q{} } $text =~ / $symbol  (\S+)/gxms };
+            $tags_of{$ident}{$tag} = { map { $_ => q{} }
+                    $text =~ / (?:^|\s) $symbol  (\S+)/gxms };
         }
         ( $priority_of{$ident} ) = $text =~ /^ \s* \( ([A-Z]) \)/ixms;
 

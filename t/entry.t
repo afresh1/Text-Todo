@@ -7,7 +7,7 @@
 #       AUTHOR:  Andrew Fresh (AAF), andrew@cpan.org
 #      COMPANY:  Red River Communications
 #      CREATED:  07/10/09 11:32:39
-#     REVISION:  $RedRiver: 20.entry.t,v 1.1 2009/07/10 22:26:14 andrew Exp $
+#     REVISION:  $RedRiver: 20.entry.t,v 1.2 2009/07/11 15:58:13 andrew Exp $
 #===============================================================================
 
 use strict;
@@ -29,10 +29,10 @@ is_deeply( [ $e->contexts ], [], "check contexts are empty" );
 is_deeply( [ $e->projects ], [], "check projects are empty" );
 
 my %sample = (
-    text => '(B) @home @work keep your shoulder to the grindstone +busywork',
+    text => '(B) @home @work send email to andrew@cpan.org +say_thanks',
     priority    => 'B',
     contexts    => [ 'home', 'work' ],
-    projects    => ['busywork'],
+    projects    => ['say_thanks'],
     prepend     => 'before',
     append      => 'or something',
     new_project => 'notnapping',

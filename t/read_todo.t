@@ -8,13 +8,13 @@
 #       AUTHOR:  Andrew Fresh (AAF), andrew@cpan.org
 #      COMPANY:  Red River Communications
 #      CREATED:  07/09/09 11:45:52
-#     REVISION:  $RedRiver$
+#     REVISION:  $RedRiver: 50.read_todo.t,v 1.1 2009/07/10 22:26:14 andrew Exp $
 #===============================================================================
 
 use strict;
 use warnings;
 use File::Spec;
-use Test::More tests => 24;
+use Test::More tests => 28;
 
 my $todo_file = File::Spec->catfile( 't', 'todo1.txt' );
 my @todos = (
@@ -43,6 +43,11 @@ my @todos = (
         priority => undef,
         contexts => ['shopping'],
         projects => [],
+    },
+    {   text     => 'email andrew@cpan.org for help +report_bug @wherever',
+        priority => undef,
+        contexts => ['wherever'],
+        projects => ['report_bug'],
     },
 );
 
