@@ -1,6 +1,6 @@
 package Text::Todo::Entry;
 
-# $RedRiver: Entry.pm,v 1.5 2009/07/11 16:02:18 andrew Exp $
+# $RedRiver: Entry.pm,v 1.6 2009/07/13 17:50:37 andrew Exp $
 
 use warnings;
 use strict;
@@ -16,6 +16,7 @@ use version; our $VERSION = qv('0.0.1');
 
     my %tags_of;
     my %priority_of;
+    my %completion_status_of;
 
     my %tags = (
         context => q{@},
@@ -62,7 +63,9 @@ use version; our $VERSION = qv('0.0.1');
             $tags_of{$ident}{$tag} = { map { $_ => q{} }
                     $text =~ / (?:^|\s) $symbol  (\S+)/gxms };
         }
-        ( $priority_of{$ident} ) = $text =~ /^ \s* \( ([A-Z]) \)/ixms;
+        ( $completion_status_of{$ident} ) = $text =~ /^ \s*(x) /ixms;
+        ( $priority_of{$ident} )
+            = $text =~ /^ (?:\s*x)? \s* \( ([A-Z]) \)/ixms;
 
         return 1;
     }
@@ -94,6 +97,13 @@ use version; our $VERSION = qv('0.0.1');
         return $priority_of{$ident};
     }
 
+    sub completed {
+        my ($self) = @_;
+        my $ident = ident($self);
+
+        return $completion_status_of{$ident};
+    }
+
     sub change {
         my ( $self, $text ) = @_;
         return $self->_update_entry($text);
@@ -119,8 +129,17 @@ use version; our $VERSION = qv('0.0.1');
         return $self->change( join q{ }, $self->text, $addition );
     }
 
-}
+    sub complete {
+        my ($self) = @_;
 
+        if ( $self->completed ) {
+            return 1;
+        }
+
+        return $self->change( join q{ }, 'x', $self->text );
+    }
+
+}
 1;    # Magic true value required at end of module
 __END__
 
@@ -178,6 +197,10 @@ This document describes Text::Todo::Entry version 0.0.1
 =head2 prepend
 
 =head2 append
+
+=head2 complete
+
+=head2 completed
 
 
 =head1 DIAGNOSTICS

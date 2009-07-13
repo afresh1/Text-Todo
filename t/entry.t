@@ -7,13 +7,13 @@
 #       AUTHOR:  Andrew Fresh (AAF), andrew@cpan.org
 #      COMPANY:  Red River Communications
 #      CREATED:  07/10/09 11:32:39
-#     REVISION:  $RedRiver: 20.entry.t,v 1.2 2009/07/11 15:58:13 andrew Exp $
+#     REVISION:  $RedRiver: 20.entry.t,v 1.3 2009/07/13 17:50:37 andrew Exp $
 #===============================================================================
 
 use strict;
 use warnings;
 
-use Test::More tests => 29;    # last test to print
+use Test::More tests => 34;    # last test to print
 
 my $class = 'Text::Todo::Entry';
 
@@ -22,11 +22,6 @@ BEGIN: { use_ok( $class, "use $class" ) }
 diag("Testing 20 entry $class $Text::Todo::Entry::VERSION");
 
 my $e = new_ok($class);
-
-is( $e->text,     '',    "Make sure entry is blank" );
-is( $e->priority, undef, "check priority is undef" );
-is_deeply( [ $e->contexts ], [], "check contexts are empty" );
-is_deeply( [ $e->projects ], [], "check projects are empty" );
 
 my %sample = (
     text => '(B) @home @work send email to andrew@cpan.org +say_thanks',
@@ -72,3 +67,15 @@ $sample{text} .= ' @' . $sample{new_context};
 ok( $e->append( '@' . $sample{new_context} ), 'Add context' );
 is( $e->text, $sample{text}, "Make sure entry matches" );
 ok( $e->in_context( $sample{new_context} ), 'now in new context' );
+
+ok( !$e->completed, 'not completed' );
+ok( $e->complete, 'mark as completed' );
+ok( $e->completed,  'now completed' );
+is( $e->text, 'x ' . $sample{text}, "Make sure entry matches" );
+
+ok( $e->change(   '' ), 'Blank entry' );
+is( $e->text,     '',    "Make sure entry is blank" );
+is( $e->priority, undef, "check priority is undef" );
+is_deeply( [ $e->contexts ], [], "check contexts are empty" );
+is_deeply( [ $e->projects ], [], "check projects are empty" );
+
