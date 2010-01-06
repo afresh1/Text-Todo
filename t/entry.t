@@ -7,7 +7,7 @@
 #       AUTHOR:  Andrew Fresh (AAF), andrew@cpan.org
 #      COMPANY:  Red River Communications
 #      CREATED:  07/10/09 11:32:39
-#     REVISION:  $RedRiver: 20.entry.t,v 1.3 2009/07/13 17:50:37 andrew Exp $
+#     REVISION:  $RedRiver: entry.t,v 1.4 2009/07/13 18:05:50 andrew Exp $
 #===============================================================================
 
 use strict;
@@ -19,7 +19,7 @@ my $class = 'Text::Todo::Entry';
 
 BEGIN: { use_ok( $class, "use $class" ) }
 
-diag("Testing 20 entry $class $Text::Todo::Entry::VERSION");
+diag("Testing entry $class $Text::Todo::Entry::VERSION");
 
 my $e = new_ok($class);
 

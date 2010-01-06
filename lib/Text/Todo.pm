@@ -1,6 +1,6 @@
 package Text::Todo;
 
-# $RedRiver: Todo.pm,v 1.1.1.1 2009/07/09 18:21:34 andrew Exp $
+# $RedRiver: Todo.pm,v 1.2 2009/07/10 22:26:14 andrew Exp $
 
 use warnings;
 use strict;
@@ -22,27 +22,27 @@ use version; our $VERSION = qv('0.0.1');
         my $self = bless anon_scalar(), $class;
         my $ident = ident($self);
 
-        $file_of{$ident} = $file;
-
-        if ($file) {
-            $self->load;
-        }
+        if ($file) { $self->load($file); }
 
         return $self;
     }
 
-    sub load {
+    sub file {
         my ( $self, $file ) = @_;
         my $ident = ident($self);
 
         if ($file) {
             $file_of{$ident} = $file;
         }
-        else {
-            $file = $file_of{$ident};
-        }
 
-        croak 'load requires a filename' if !$file;
+        return $file_of{$ident};
+    }
+
+    sub load {
+        my ( $self, $file ) = @_;
+        my $ident = ident($self);
+
+        $file = $self->file($file) || croak 'load requires a filename';
 
         my @list;
         open my $fh, '<', $file or croak "Couldn't open [$file]: $!";
@@ -60,18 +60,12 @@ use version; our $VERSION = qv('0.0.1');
         my ( $self, $file ) = @_;
         my $ident = ident($self);
 
-        if ($file) {
-            $file_of{$ident} = $file;
-        }
-        else {
-            $file = $file_of{$ident};
-        }
-
-        croak 'save requires a filename' if !$file;
+        $file = $self->file($file) || croak 'save requires a filename';
 
         open my $fh, '>', $file or croak "Couldn't open [$file]: $!";
         foreach my $e ( @{ $list_of{$ident} } ) {
-            print $e->text . "\n" or croak "Couldn't print to [$file]: $!";
+            print {$fh} $e->text . "\n"
+                or croak "Couldn't print to [$file]: $!";
         }
         close $fh or croak "Couldn't close [$file]: $!";
 
@@ -79,7 +73,7 @@ use version; our $VERSION = qv('0.0.1');
     }
 
     sub list {
-        my ($self) = shift;
+        my ($self) = @_;
         my $ident = ident($self);
         return if !$list_of{$ident};
 
@@ -100,6 +94,25 @@ use version; our $VERSION = qv('0.0.1');
         #return \@list;
     }
 
+    sub add {
+        my ( $self, $entry ) = @_;
+        my $ident = ident($self);
+
+        if ( ref $entry ) {
+            if ( ref $entry ne 'Text::Todo::Entry' ) {
+                croak(    'entry is a '
+                        . ref($entry)
+                        . ' not a Text::Todo::Entry!' );
+            }
+        }
+        else {
+            $entry = Text::Todo::Entry->new($entry);
+        }
+
+        push @{ $list_of{$ident} }, $entry;
+
+        return $entry;
+    }
 }
 
 1;    # Magic true value required at end of module
@@ -146,7 +159,11 @@ This document describes Text::Todo version 0.0.1
 
 =head2 save
 
+=head2 file
+
 =head2 list
+
+=head2 add
 
 =head1 DIAGNOSTICS
 
