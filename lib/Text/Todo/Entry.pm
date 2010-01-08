@@ -1,6 +1,6 @@
 package Text::Todo::Entry;
 
-# $RedRiver: Entry.pm,v 1.7 2009/07/13 18:05:50 andrew Exp $
+# $RedRiver: Entry.pm,v 1.8 2010/01/08 04:50:41 andrew Exp $
 
 use warnings;
 use strict;
@@ -47,14 +47,8 @@ use version; our $VERSION = qv('0.0.1');
     }
 
     # Aliases
-    sub app     { append(@_) }
     sub change  { _update_entry(@_) }
     sub depri   { _set_priority( @_, '' ) }
-    sub do      { complete(@_) }
-    sub done    { completed(@_) }
-    sub dp      { depri(@_) }
-    sub p       { priority(@_) }
-    sub prep    { prepend(@_) }
     sub pri     { priority(@_) }
     sub replace { _update_entry(@_) }
 
@@ -132,13 +126,6 @@ use version; our $VERSION = qv('0.0.1');
         return $priority_of{$ident};
     }
 
-    sub completed {
-        my ($self) = @_;
-        my $ident = ident($self);
-
-        return $completion_status_of{$ident};
-    }
-
     sub prepend {
         my ( $self, $addition ) = @_;
 
@@ -147,8 +134,8 @@ use version; our $VERSION = qv('0.0.1');
 
         $new =~ s/$priority_completion_regex//xms;
 
-        if ( $self->completed ) {
-            push @new, $self->completed;
+        if ( $self->done) {
+            push @new, $self->done;
         }
 
         if ( $self->priority ) {
@@ -167,17 +154,24 @@ use version; our $VERSION = qv('0.0.1');
         return $self->_update_entry( join q{ }, $self->text, $addition );
     }
 
-    sub complete {
+    sub do {
         my ($self) = @_;
         my $ident = ident($self);
 
-        if ( $self->completed ) {
+        if ( $self->done) {
             return 1;
         }
 
         $completion_status_of{$ident} = 'x';
 
         return $self->prepend();
+    }
+
+    sub done {
+        my ($self) = @_;
+        my $ident = ident($self);
+
+        return $completion_status_of{$ident};
     }
 
 }
@@ -239,9 +233,9 @@ This document describes Text::Todo::Entry version 0.0.1
 
 =head2 append
 
-=head2 complete
+=head2 do
 
-=head2 completed
+=head2 done
 
 
 =head1 DIAGNOSTICS

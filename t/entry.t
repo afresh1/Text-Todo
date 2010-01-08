@@ -7,7 +7,7 @@
 #       AUTHOR:  Andrew Fresh (AAF), andrew@cpan.org
 #      COMPANY:  Red River Communications
 #      CREATED:  07/10/09 11:32:39
-#     REVISION:  $RedRiver: entry.t,v 1.5 2010/01/06 19:54:56 andrew Exp $
+#     REVISION:  $RedRiver: entry.t,v 1.6 2010/01/08 04:44:54 andrew Exp $
 #===============================================================================
 
 use strict;
@@ -80,9 +80,9 @@ ok( $e->depri(), 'Deprioritize' );
 is( $e->text, $sample{text}, 'Make sure entry matches' );
 is( $e->priority, undef, 'New priority is set' );
 
-ok( !$e->completed, 'not completed' );
-ok( $e->complete, 'mark as completed' );
-ok( $e->completed,  'now completed' );
+ok( !$e->done, 'not done' );
+ok( $e->do, 'mark as done' );
+ok( $e->done,  'now done' );
 is( $e->text, 'x ' . $sample{text}, 'Make sure entry matches' );
 
 ok( $e->change(   '' ), 'Blank entry' );
