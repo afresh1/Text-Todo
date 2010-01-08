@@ -1,6 +1,6 @@
 package Text::Todo::Entry;
 
-# $RedRiver: Entry.pm,v 1.6 2009/07/13 17:50:37 andrew Exp $
+# $RedRiver: Entry.pm,v 1.7 2009/07/13 18:05:50 andrew Exp $
 
 use warnings;
 use strict;
@@ -23,6 +23,13 @@ use version; our $VERSION = qv('0.0.1');
         project => q{+},
     );
 
+    # XXX Should the completion (x) be case sensitive?
+    my $priority_completion_regex = qr/
+        ^ \s*
+        (?i:   (x)        \s+)?
+        (?i:\( ([A-Z]) \) \s+)?
+    /xms;
+
     for my $tag ( keys %tags ) {
         ## no critic strict
         no strict 'refs';    # Violates use strict, but allows code generation
@@ -38,6 +45,18 @@ use version; our $VERSION = qv('0.0.1');
             return $self->_is_in( $tag . 's', $item );
         };
     }
+
+    # Aliases
+    sub app     { append(@_) }
+    sub change  { _update_entry(@_) }
+    sub depri   { _set_priority( @_, '' ) }
+    sub do      { complete(@_) }
+    sub done    { completed(@_) }
+    sub dp      { depri(@_) }
+    sub p       { priority(@_) }
+    sub prep    { prepend(@_) }
+    sub pri     { priority(@_) }
+    sub replace { _update_entry(@_) }
 
     sub new {
         my ( $class, $text ) = @_;
@@ -63,9 +82,8 @@ use version; our $VERSION = qv('0.0.1');
             $tags_of{$ident}{$tag} = { map { $_ => q{} }
                     $text =~ / (?:^|\s) $symbol  (\S+)/gxms };
         }
-        ( $completion_status_of{$ident} ) = $text =~ /^ \s*(x) /ixms;
-        ( $priority_of{$ident} )
-            = $text =~ /^ (?:\s*x)? \s* \( ([A-Z]) \)/ixms;
+        ( $completion_status_of{$ident}, $priority_of{$ident} )
+            = $text =~ / $priority_completion_regex /xms;
 
         return 1;
     }
@@ -90,9 +108,26 @@ use version; our $VERSION = qv('0.0.1');
         return $text_of{$ident};
     }
 
-    sub priority {
-        my ($self) = @_;
+    sub _set_priority {
+        my ( $self, $new_pri ) = @_;
         my $ident = ident($self);
+
+        if ( $new_pri !~ /^[a-zA-Z]?$/xms ) {
+            croak "Invalid priority [$new_pri]";
+        }
+
+        $priority_of{$ident} = $new_pri;
+
+        return $self->prepend();
+    }
+
+    sub priority {
+        my ( $self, $new_pri ) = @_;
+        my $ident = ident($self);
+
+        if ($new_pri) {
+            return $self->_set_priority($new_pri);
+        }
 
         return $priority_of{$ident};
     }
@@ -104,39 +139,45 @@ use version; our $VERSION = qv('0.0.1');
         return $completion_status_of{$ident};
     }
 
-    sub change {
-        my ( $self, $text ) = @_;
-        return $self->_update_entry($text);
-    }
-
     sub prepend {
         my ( $self, $addition ) = @_;
 
         my $new = $self->text;
+        my @new;
 
-        if ( my $priority = $self->priority ) {
-            $new =~ s/^( \s* \( $priority \))/$1 $addition/xms;
-        }
-        else {
-            $new = join q{ }, $addition, $new;
+        $new =~ s/$priority_completion_regex//xms;
+
+        if ( $self->completed ) {
+            push @new, $self->completed;
         }
 
-        return $self->change($new);
+        if ( $self->priority ) {
+            push @new, '(' . $self->priority . ')';
+        }
+
+        if ( defined $addition && length $addition ) {
+            push @new, $addition;
+        }
+
+        return $self->_update_entry( join q{ }, @new, $new );
     }
 
     sub append {
         my ( $self, $addition ) = @_;
-        return $self->change( join q{ }, $self->text, $addition );
+        return $self->_update_entry( join q{ }, $self->text, $addition );
     }
 
     sub complete {
         my ($self) = @_;
+        my $ident = ident($self);
 
         if ( $self->completed ) {
             return 1;
         }
 
-        return $self->change( join q{ }, 'x', $self->text );
+        $completion_status_of{$ident} = 'x';
+
+        return $self->prepend();
     }
 
 }
