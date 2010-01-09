@@ -8,7 +8,7 @@
 #       AUTHOR:  Andrew Fresh (AAF), andrew@cpan.org
 #      COMPANY:  Red River Communications
 #      CREATED:  01/07/10 19:11
-#     REVISION:  $RedRiver: list.t,v 1.1 2010/01/08 04:38:44 andrew Exp $
+#     REVISION:  $RedRiver: list.t,v 1.2 2010/01/09 05:00:21 andrew Exp $
 #===============================================================================
 
 use strict;
@@ -100,19 +100,38 @@ for my $id ( 0 .. $#copy_list ) {
 ok( @projects = $copy->listproj, 'listproj for current list' );
 is_deeply( \@projects, [ 'dos', 'uno' ], 'got the projects we expected' );
 
+my $entry_to_archive;
+ok( $entry_to_archive = $copy->list->[1], 'read entry_to_archive' );
+is( $entry_to_archive->text,
+    'x completed entry 3',
+    'make sure we got the right entry'
+);
+
 TODO: {
     local $TODO = 'No tests for archive and it isn\'t even written yet';
     ok( $copy->archive );
+    isnt( $copy->list->[1]->text,
+        $entry_to_archive->text, 'make sure it changed' );
+
+SKIP: {
+        skip 'unable to load done_file', 1
+            if !ok( $copy->load('done_file'), 'read the done_file' );
+        is( $copy->list->[-1]->text,
+            $entry_to_archive->text, 'make sure it moved to the archive' );
+    }
 }
 
-TODO: {
-    local $TODO = 'No tests for addto and it isn\'t even written yet';
-    ok( $copy->addto );
-}
+my $file;
+ok( $file = $copy->file('done_file'), 'get the done_file name' );
+is( $file, $todo_dir . '/done.txt', 'the done_file name what we expected?' );
 
-TODO: {
-    local $TODO = 'No tests for listfile and it isn\'t even written yet';
-    ok( $copy->listfile );
-}
+ok( $copy->addto( $file, 'added text' ) );
+
+my @done;
+ok( @done = $copy->listfile('done_file'), 'get items in done_file' );
+is( $done[-1]->text, 'added text', 'make sure what we added is there' );
+
+#is( $done[-2]->text, $entry_to_archive->text,
+#    'make sure it moved to the archive' );
 
 done_testing();

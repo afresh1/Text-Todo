@@ -18,6 +18,7 @@ use version; our $VERSION = qv('0.0.1');
 
     my %path_of;
     my %list_of;
+    my %loaded_of;
 
     sub new {
         my ( $class, $options ) = @_;
@@ -130,28 +131,41 @@ use version; our $VERSION = qv('0.0.1');
         my ( $self, $file ) = @_;
         my $ident = ident($self);
 
+        $loaded_of{$ident} = undef;
+
+        if ( $list_of{$ident} = $self->listfile($file) ) {
+            $loaded_of{$ident} = $file;
+            return 1;
+        }
+
+        return;
+    }
+
+    sub listfile {
+        my ( $self, $file ) = @_;
+
         $file = $self->file($file);
 
         if ( !defined $file ) {
-            croak q{todo file can't be found};
+            carp q{file can't be found};
+            return;
         }
 
         if ( !-e $file ) {
-            carp "todo file [$file] does not exist";
+            carp "file [$file] does not exist";
             return;
         }
 
         my @list;
-        my $line = 1;
         open my $fh, '<', $file or croak "Couldn't open [$file]: $!";
         while (<$fh>) {
             s/\r?\n$//xms;
+            next if !length $_;
             push @list, Text::Todo::Entry->new($_);
         }
         close $fh or croak "Couldn't close [$file]: $!";
-        $list_of{$ident} = \@list;
 
-        return 1;
+        return wantarray ? @list : \@list;
     }
 
     sub save {
@@ -249,9 +263,28 @@ use version; our $VERSION = qv('0.0.1');
         return wantarray ? @projects : \@projects;
     }
 
-    sub archive  { carp 'unsupported'; return }
-    sub addto    { carp 'unsupported'; return }
-    sub listfile { carp 'unsupported'; return }
+    sub archive { carp 'unsupported'; return }
+
+    sub addto {
+        my ( $self, $file, $entry ) = @_;
+        my $ident = ident($self);
+
+        $file = $self->file($file);
+        if ( !defined $file ) {
+            croak q{file can't be found};
+        }
+
+        open my $fh, '>>', $file or croak "Couldn't open [$file]: $!";
+        print {$fh} $entry, "\n"
+            or croak "Couldn't print to [$file]: $!";
+        close $fh or croak "Couldn't close [$file]: $!";
+
+        if ( defined $loaded_of{$ident} && $file eq $loaded_of{$ident} ) {
+            return $self->load($file);
+        }
+
+        return 1;
+    }
 
     sub _find_entry_id {
         my ( $self, $entry ) = @_;
@@ -292,7 +325,7 @@ I will have to figure out how to include $VERSION in this somehow.
 
 Perhaps RCS Id is good enough?
 
-    $Id: Todo.pm,v 1.7 2010/01/09 05:26:51 andrew Exp $
+    $Id: Todo.pm,v 1.8 2010/01/09 06:26:43 andrew Exp $
 
 =head1 SYNOPSIS
 
