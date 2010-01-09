@@ -8,13 +8,13 @@
 #       AUTHOR:  Andrew Fresh (AAF), andrew@cpan.org
 #      COMPANY:  Red River Communications
 #      CREATED:  01/07/10 19:11
-#     REVISION:  $RedRiver: list.t,v 1.3 2010/01/09 06:26:43 andrew Exp $
+#     REVISION:  $RedRiver: list.t,v 1.4 2010/01/09 06:54:15 andrew Exp $
 #===============================================================================
 
 use strict;
 use warnings;
 
-use Test::More;    #tests => 2;
+use Test::More tests => 47;
 
 use File::Temp qw/ tempdir /;
 use Data::Dumper;
@@ -96,7 +96,6 @@ for my $id ( 0 .. $#copy_list ) {
     }
 }
 
-@projects;
 ok( @projects = $copy->listproj, 'listproj for current list' );
 is_deeply( \@projects, [ 'dos', 'uno' ], 'got the projects we expected' );
 
