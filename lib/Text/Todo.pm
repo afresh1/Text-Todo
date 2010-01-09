@@ -133,6 +133,8 @@ use version; our $VERSION = qv('0.0.1');
 
         $loaded_of{$ident} = undef;
 
+        $file = $self->file($file);
+
         if ( $list_of{$ident} = $self->listfile($file) ) {
             $loaded_of{$ident} = $file;
             return 1;
@@ -183,6 +185,8 @@ use version; our $VERSION = qv('0.0.1');
                 or croak "Couldn't print to [$file]: $!";
         }
         close $fh or croak "Couldn't close [$file]: $!";
+
+        $loaded_of{$ident} = $file;
 
         return 1;
     }
@@ -263,7 +267,36 @@ use version; our $VERSION = qv('0.0.1');
         return wantarray ? @projects : \@projects;
     }
 
-    sub archive { carp 'unsupported'; return }
+    sub archive {
+        my ($self) = @_;
+        my $ident = ident($self);
+
+        if ( !defined $loaded_of{$ident}
+            || $loaded_of{$ident} ne $self->file('todo_file') )
+        {
+            carp 'todo_file not loaded';
+            return;
+        }
+
+        my $archived = 0;
+    ENTRY: foreach my $e ( $self->list ) {
+            if ( $e->done ) {
+                if ( $self->addto( 'done_file', $e ) && $self->del($e) ) {
+                    $archived++;
+                }
+                else {
+                    carp q{Couldn't archive entry [} . $e->text . ']';
+                    last ENTRY;
+                }
+            }
+        }
+
+        if ($archived) {
+            $self->save;
+        }
+
+        return $archived;
+    }
 
     sub addto {
         my ( $self, $file, $entry ) = @_;
@@ -272,6 +305,16 @@ use version; our $VERSION = qv('0.0.1');
         $file = $self->file($file);
         if ( !defined $file ) {
             croak q{file can't be found};
+        }
+
+        if ( ref $entry ) {
+            if ( ref $entry eq 'Text::Todo::Entry' ) {
+                $entry = $entry->text;
+            }
+            else {
+                carp 'Unknown ref [' . ref($entry) . ']';
+                return;
+            }
         }
 
         open my $fh, '>>', $file or croak "Couldn't open [$file]: $!";
@@ -325,7 +368,7 @@ I will have to figure out how to include $VERSION in this somehow.
 
 Perhaps RCS Id is good enough?
 
-    $Id: Todo.pm,v 1.8 2010/01/09 06:26:43 andrew Exp $
+    $Id: Todo.pm,v 1.9 2010/01/09 06:54:15 andrew Exp $
 
 =head1 SYNOPSIS
 
@@ -339,15 +382,29 @@ For more information see L<http://todotxt.com>
 
 =head2 new
 
+=head2 file
+
 =head2 load
 
 =head2 save
 
-=head2 file
-
 =head2 list
 
+=head2 listpri
+
+=head2 listproj
+
 =head2 add
+
+=head2 del
+
+=head2 move
+
+=head2 archive
+
+=head2 addto
+
+=head2 listfile
 
 =head1 DIAGNOSTICS
 

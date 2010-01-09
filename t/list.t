@@ -8,7 +8,7 @@
 #       AUTHOR:  Andrew Fresh (AAF), andrew@cpan.org
 #      COMPANY:  Red River Communications
 #      CREATED:  01/07/10 19:11
-#     REVISION:  $RedRiver: list.t,v 1.2 2010/01/09 05:00:21 andrew Exp $
+#     REVISION:  $RedRiver: list.t,v 1.3 2010/01/09 06:26:43 andrew Exp $
 #===============================================================================
 
 use strict;
@@ -64,7 +64,7 @@ for my $id ( 0 .. $#orig_list ) {
 $orig = undef;
 
 my @pri_list;
-ok( @pri_list = $copy->listpri, 'load priority item' );
+ok( @pri_list = $copy->listpri, 'list priority item' );
 is( scalar @pri_list, 1, 'only 1 item in the priority list' );
 is( $pri_list[0]->text, '(A) entry 1 @one +uno', 'priority item is correct' );
 
@@ -107,31 +107,25 @@ is( $entry_to_archive->text,
     'make sure we got the right entry'
 );
 
-TODO: {
-    local $TODO = 'No tests for archive and it isn\'t even written yet';
-    ok( $copy->archive );
-    isnt( $copy->list->[1]->text,
-        $entry_to_archive->text, 'make sure it changed' );
+ok( $copy->archive, 'archive done items' );
+isnt( $copy->list->[1]->text,
+    $entry_to_archive->text, 'make sure it changed' );
 
-SKIP: {
-        skip 'unable to load done_file', 1
-            if !ok( $copy->load('done_file'), 'read the done_file' );
-        is( $copy->list->[-1]->text,
-            $entry_to_archive->text, 'make sure it moved to the archive' );
-    }
-}
+ok( $copy->load('done_file'), 'read the done_file' );
+is( $copy->list->[-1]->text,
+    $entry_to_archive->text, 'make sure it moved to the archive' );
 
 my $file;
 ok( $file = $copy->file('done_file'), 'get the done_file name' );
 is( $file, $todo_dir . '/done.txt', 'the done_file name what we expected?' );
 
-ok( $copy->addto( $file, 'added text' ) );
+ok( $copy->addto( $file, 'added text' ), 'Add text to file' );
 
 my @done;
 ok( @done = $copy->listfile('done_file'), 'get items in done_file' );
 is( $done[-1]->text, 'added text', 'make sure what we added is there' );
 
-#is( $done[-2]->text, $entry_to_archive->text,
-#    'make sure it moved to the archive' );
+is( $done[-2]->text, $entry_to_archive->text,
+    'make sure it moved to the archive' );
 
 done_testing();
