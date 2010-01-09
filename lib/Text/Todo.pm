@@ -1,6 +1,6 @@
 package Text::Todo;
 
-# $RedRiver: Todo.pm,v 1.5 2010/01/09 05:00:21 andrew Exp $
+# $RedRiver: Todo.pm,v 1.6 2010/01/09 05:15:20 andrew Exp $
 
 use warnings;
 use strict;
@@ -249,9 +249,9 @@ use version; our $VERSION = qv('0.0.1');
         return wantarray ? @projects : \@projects;
     }
 
-    sub archive  { carp "unsupported\n"; return }
-    sub addto    { carp "unsupported\n"; return }
-    sub listfile { carp "unsupported\n"; return }
+    sub archive  { carp 'unsupported'; return }
+    sub addto    { carp 'unsupported'; return }
+    sub listfile { carp 'unsupported'; return }
 
     sub _find_entry_id {
         my ( $self, $entry ) = @_;
@@ -292,7 +292,7 @@ I will have to figure out how to include $VERSION in this somehow.
 
 Perhaps RCS Id is good enough?
 
-    $Id: Todo.pm,v 1.6 2010/01/09 05:15:20 andrew Exp $
+    $Id: Todo.pm,v 1.7 2010/01/09 05:26:51 andrew Exp $
 
 =head1 SYNOPSIS
 
