@@ -1,6 +1,6 @@
 package Text::Todo;
 
-# $RedRiver: Todo.pm,v 1.4 2010/01/06 20:07:16 andrew Exp $
+# $RedRiver: Todo.pm,v 1.5 2010/01/09 05:00:21 andrew Exp $
 
 use warnings;
 use strict;
@@ -133,7 +133,7 @@ use version; our $VERSION = qv('0.0.1');
         $file = $self->file($file);
 
         if ( !defined $file ) {
-            croak "todo file can't be found";
+            croak q{todo file can't be found};
         }
 
         if ( !-e $file ) {
@@ -160,7 +160,7 @@ use version; our $VERSION = qv('0.0.1');
 
         $file = $self->file($file);
         if ( !defined $file ) {
-            croak "todo file can't be found";
+            croak q{todo file can't be found};
         }
 
         open my $fh, '>', $file or croak "Couldn't open [$file]: $!";
@@ -176,11 +176,9 @@ use version; our $VERSION = qv('0.0.1');
     sub list {
         my ($self) = @_;
         my $ident = ident($self);
+
         return if !$list_of{$ident};
-
-        my @list = @{ $list_of{$ident} };
-
-        return wantarray ? @list : \@list;
+        return wantarray ? @{ $list_of{$ident} } : $list_of{$ident};
     }
 
     sub listpri {
@@ -208,14 +206,14 @@ use version; our $VERSION = qv('0.0.1');
         return $entry;
     }
 
-    sub del { 
+    sub del {
         my ( $self, $src ) = @_;
         my $ident = ident($self);
 
-        my $id  = $self->_find_entry_id($src);
+        my $id = $self->_find_entry_id($src);
 
         my @list = $self->list;
-        my $entry = splice( @list, $id, 1 );
+        my $entry = splice @list, $id, 1;
         $list_of{$ident} = \@list;
 
         return $entry;
@@ -228,19 +226,19 @@ use version; our $VERSION = qv('0.0.1');
         my $src  = $self->_find_entry_id($entry);
         my @list = $self->list;
 
-        splice( @list, $dst, 0, splice( @list, $src, 1 ) );
+        splice @list, $dst, 0, splice @list, $src, 1;
 
         $list_of{$ident} = \@list;
 
         return 1;
     }
 
-    sub listproj { 
+    sub listproj {
         my ( $self, $entry, $dst ) = @_;
         my $ident = ident($self);
 
         my %available_projects;
-        foreach my $e ($self->list) {
+        foreach my $e ( $self->list ) {
             foreach my $p ( $e->projects ) {
                 $available_projects{$p} = 1;
             }
@@ -251,10 +249,9 @@ use version; our $VERSION = qv('0.0.1');
         return wantarray ? @projects : \@projects;
     }
 
-    sub archive  { carp "unsupported\n", return }
-
-    sub addto    { carp "unsupported\n", return }
-    sub listfile { carp "unsupported\n", return }
+    sub archive  { carp "unsupported\n"; return }
+    sub addto    { carp "unsupported\n"; return }
+    sub listfile { carp "unsupported\n"; return }
 
     sub _find_entry_id {
         my ( $self, $entry ) = @_;
@@ -289,6 +286,13 @@ __END__
 
 Text::Todo - Perl interface to todo_txt files
 
+=head1 VERSION
+
+I will have to figure out how to include $VERSION in this somehow.
+
+Perhaps RCS Id is good enough?
+
+    $Id: Todo.pm,v 1.6 2010/01/09 05:15:20 andrew Exp $
 
 =head1 SYNOPSIS
 
