@@ -1,6 +1,6 @@
 package Text::Todo;
 
-# $RedRiver: Todo.pm,v 1.6 2010/01/09 05:15:20 andrew Exp $
+# $RedRiver: Todo.pm,v 1.9 2010/01/09 06:54:15 andrew Exp $
 
 use warnings;
 use strict;
@@ -9,8 +9,6 @@ use Carp;
 use Class::Std::Utils;
 use Text::Todo::Entry;
 use File::Spec;
-
-use Data::Dumper;
 
 use version; our $VERSION = qv('0.0.1');
 
@@ -362,89 +360,202 @@ __END__
 
 Text::Todo - Perl interface to todo_txt files
 
+
 =head1 VERSION
 
-I will have to figure out how to include $VERSION in this somehow.
+Since the $VERSION can't be automatically included, 
+here is the RCS Id instead, you'll have to look up $VERSION.
 
-Perhaps RCS Id is good enough?
-
-    $Id: Todo.pm,v 1.9 2010/01/09 06:54:15 andrew Exp $
+    $Id: Todo.pm,v 1.10 2010/01/09 20:41:45 andrew Exp $
 
 =head1 SYNOPSIS
 
     use Text::Todo;
+    
+    my $todo = Text::Todo->new('todo/todo.txt');
+
+    foreach my $e (sort { lc($_->text) cmp lc($e->text)} $todo->list) {
+        print $e->text, "\n";
+    }
+
 
 =head1 DESCRIPTION
 
+This module is a basic interface to the todo.txt files as described by
+Lifehacker and extended by members of their community.
+
 For more information see L<http://todotxt.com>
+
+This module supports the 3 axes of an effective todo list. 
+Priority, Project and Context.
+
+It does not support other notations or many of the more advanced features of
+the todo.sh like plugins.
+
+It should be extensible, but and hopefully will be before a 1.0 release.
+
 
 =head1 INTERFACE 
 
 =head2 new
 
+    new({ 
+        [ todo_dir    => 'directory', ]
+        [ todo_file   => 'filename in todo_dir', ]
+        [ done_file   => 'filename in todo_dir', ]
+        [ report_file => 'filename in todo_dir', ]
+        });
+
+Allows you to set each item individually.  todo_file defaults to todo.txt.
+
+    new('path/to/todo.txt');
+
+Automatically sets todo_dir to 'path/to', todo_file to 'todo.txt' 
+
+    new('path/to')
+
+If you pass an existing directory to new, it will set todo_dir. 
+
+
+If you what you set matches (.*)todo(.*).txt it will automatically set 
+done_file to $1done$2.txt
+and
+report_file to $1report$2.txt.
+
+For example, new('todo/todo.shopping.txt') will set 
+todo_dir to 'todo',
+todo_file to 'todo.shopping.txt',
+done_file to 'done.shopping.txt',
+and
+report_file to 'report.shopping.txt'.
+
 =head2 file
+
+Allows you to read the paths to the files in use. 
+If as in the SYNOPSIS above you used $todo = new('todo/todo.txt').
+
+    $todo_file = $todo->file('todo_file');
+
+then, $todo_file eq 'todo/todo.txt'
 
 =head2 load
 
+Allows you to load a different file into the object.
+
+    $todo->load('done_file');
+
+This effects the other functions that act on the list.
+
 =head2 save
+
+    $todo->save(['new/path/to/todo']);
+
+Writes the list to the file. Either the current working file or something
+that can be recognized by file(). 
+
+If you specify a filename it will save to that file and update the paths.  
+Additional changes to the object work on that file.
 
 =head2 list
 
+    my @todo_list = $todo->list;
+
 =head2 listpri
+
+Like list, but only returns entries that have priority set.
+
+    my @priority_list = $todo->listpri;
 
 =head2 listproj
 
+Returns projects in the list sorted by name.  
+If there were projects +GarageSale and +Shopping
+
+    my @projects = $todo->listproj;
+
+is the same as
+
+    @projects = ( 'GarageSale', 'Shopping' );
+
 =head2 add
+
+Adds a new entry to the list. 
+Can either be a Text::Todo::Entry object or plain text.
+
+    $todo->add('new todo entry');
+
+It then becomes $todo->list->[-1];
 
 =head2 del
 
+Remove an entry from the list, either the reference or by number.
+
+    $removed_entry = $todo->del($entry);
+
+$entry can either be an Text::Todo::Entry in the list or the index of the
+entry to delete.
+
+Note that entries are 0 indexed (as expected in perl) not starting at line 1.
+
 =head2 move
+
+    $todo->move($entry, $new_pos);
+
+$entry can either be the number of the entry or the actual entry.
+$new_pos is the new position to put it. 
+
+Note that entries are 0 indexed (as expected in perl) not starting at line 1.
 
 =head2 archive
 
+    $todo->archive
+
+Iterates over the list and for each done entry, 
+addto('done_file') 
+and
+del($entry).
+If any were archived it will then 
+save() 
+and 
+load().
+
 =head2 addto
+
+    $todo->addto($file, $entry);
+
+Appends text to the file. 
+$file can be anyting recognized by file().
+$entry can either be a Text::Todo::Entry or plain text.
 
 =head2 listfile
 
+    @list = $todo->listfile($file);
+
+Read a file and returns a list like $todo->list but does not update the
+internal list that is being worked with.
+$file can be anyting recognized by file().
+
+
 =head1 DIAGNOSTICS
 
-=for author to fill in:
-    List every single error and warning message that the module can
-    generate (even the ones that will "never happen"), with a full
-    explanation of each problem, one or more likely causes, and any
-    suggested remedies.
+Most methods return undef on failure.  
 
-=over
-
-=item C<< Error message here, perhaps with %s placeholders >>
-
-[Description of error here]
-
-=item C<< Another error message here >>
-
-[Description of error here]
-
-[Et cetera, et cetera]
-
-=back
+Some more important methods are fatal.
 
 
 =head1 CONFIGURATION AND ENVIRONMENT
 
 Text::Todo requires no configuration files or environment variables.
 
-Someday it should be able to read and use the todo.sh config file.
+Someday it should be able to read and use the todo.sh config file.  This may
+possibly be better done in a client that would use this module.
 
 
 =head1 DEPENDENCIES
 
-=for author to fill in:
-    A list of all the other modules that this module relies upon,
-    including any restrictions on versions, and an indication whether
-    the module is part of the standard Perl distribution, part of the
-    module's distribution, or must be installed separately. ]
-
-None.
+Class::Std::Utils
+File::Spec
+version
 
 
 =head1 INCOMPATIBILITIES
