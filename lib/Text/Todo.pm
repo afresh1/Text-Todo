@@ -1,6 +1,6 @@
 package Text::Todo;
 
-# $RedRiver: Todo.pm,v 1.3 2010/01/06 19:54:56 andrew Exp $
+# $RedRiver: Todo.pm,v 1.4 2010/01/06 20:07:16 andrew Exp $
 
 use warnings;
 use strict;
@@ -8,43 +8,141 @@ use Carp;
 
 use Class::Std::Utils;
 use Text::Todo::Entry;
+use File::Spec;
+
+use Data::Dumper;
 
 use version; our $VERSION = qv('0.0.1');
 
 {
 
-    my %file_of;
+    my %path_of;
     my %list_of;
 
     sub new {
-        my ( $class, $file ) = @_;
+        my ( $class, $options ) = @_;
 
         my $self = bless anon_scalar(), $class;
         my $ident = ident($self);
 
-        if ($file) { $self->load($file); }
+        $path_of{$ident} = {
+            todo_dir    => undef,
+            todo_file   => 'todo.txt',
+            done_file   => undef,
+            report_file => undef,
+        };
+
+        if ($options) {
+            if ( ref $options eq 'HASH' ) {
+                foreach my $opt ( keys %{$options} ) {
+                    if ( exists $path_of{$ident}{$opt} ) {
+                        $self->_path_to( $opt, $options->{$opt} );
+                    }
+                    else {
+                        carp "Invalid option [$opt]";
+                    }
+                }
+            }
+            else {
+                if ( -d $options ) {
+                    $self->_path_to( 'todo_dir', $options );
+                }
+                elsif ( $options =~ /\.txt$/ixms ) {
+                    $self->_path_to( 'todo_file', $options );
+                }
+                else {
+                    carp "Unknown options [$options]";
+                }
+            }
+        }
+
+        my $file = $self->_path_to('todo_file');
+        if ( defined $file && -e $file ) {
+            $self->load();
+        }
 
         return $self;
+    }
+
+    sub _path_to {
+        my ( $self, $type, $path ) = @_;
+        my $ident = ident($self);
+
+        if ( $type eq 'todo_dir' ) {
+            if ($path) {
+                $path_of{$ident}{$type} = $path;
+            }
+            return $path_of{$ident}{$type};
+        }
+
+        if ($path) {
+            my ( $volume, $directories, $file )
+                = File::Spec->splitpath($path);
+            $path_of{$ident}{$type} = $file;
+
+            if ($volume) {
+                $directories = File::Spec->catdir( $volume, $directories );
+            }
+
+            # XXX Should we save complete paths to each file, mebbe only if
+            # the dirs are different?
+            if ($directories) {
+                $path_of{$ident}{todo_dir} = $directories;
+            }
+        }
+
+        if ( $type =~ /(todo|done|report)_file/xms ) {
+            if ( my ( $pre, $post )
+                = $path_of{$ident}{$type} =~ /^(.*)$1(.*)\.txt$/ixms )
+            {
+                foreach my $f qw( todo done report ) {
+                    if ( !defined $path_of{$ident}{ $f . '_file' } ) {
+                        $path_of{$ident}{ $f . '_file' }
+                            = $pre . $f . $post . '.txt';
+                    }
+                }
+            }
+        }
+
+        if ( defined $path_of{$ident}{todo_dir} ) {
+            return File::Spec->catfile( $path_of{$ident}{todo_dir},
+                $path_of{$ident}{$type} );
+        }
+
+        return;
     }
 
     sub file {
         my ( $self, $file ) = @_;
         my $ident = ident($self);
 
-        if ($file) {
-            $file_of{$ident} = $file;
+        if ( defined $file && exists $path_of{$ident}{$file} ) {
+            $file = $self->_path_to($file);
+        }
+        else {
+            $file = $self->_path_to( 'todo_file', $file );
         }
 
-        return $file_of{$ident};
+        return $file;
     }
 
     sub load {
         my ( $self, $file ) = @_;
         my $ident = ident($self);
 
-        $file = $self->file($file) || croak 'load requires a filename';
+        $file = $self->file($file);
+
+        if ( !defined $file ) {
+            croak "todo file can't be found";
+        }
+
+        if ( !-e $file ) {
+            carp "todo file [$file] does not exist";
+            return;
+        }
 
         my @list;
+        my $line = 1;
         open my $fh, '<', $file or croak "Couldn't open [$file]: $!";
         while (<$fh>) {
             s/\r?\n$//xms;
@@ -60,7 +158,10 @@ use version; our $VERSION = qv('0.0.1');
         my ( $self, $file ) = @_;
         my $ident = ident($self);
 
-        $file = $self->file($file) || croak 'save requires a filename';
+        $file = $self->file($file);
+        if ( !defined $file ) {
+            croak "todo file can't be found";
+        }
 
         open my $fh, '>', $file or croak "Couldn't open [$file]: $!";
         foreach my $e ( @{ $list_of{$ident} } ) {
@@ -77,24 +178,85 @@ use version; our $VERSION = qv('0.0.1');
         my $ident = ident($self);
         return if !$list_of{$ident};
 
-        return $list_of{$ident};
+        my @list = @{ $list_of{$ident} };
 
-        #my $id = 1;
-        #my @l;
-        #foreach my $e ( @{ $list_of{$ident} } ) {
-        #    push @l, $e; #{ %{$e}, id => $id };
-        #    $id++;
-        #}
-        #
-        #my @list = sort { $a->priority cmp $b->priority }
-        #    grep { defined $_->priority } @l;
-        #
-        #push @list, grep { !defined $_->priority } @l;
-        #
-        #return \@list;
+        return wantarray ? @list : \@list;
+    }
+
+    sub listpri {
+        my ($self) = @_;
+
+        my @list = grep { $_->priority } $self->list;
+
+        return wantarray ? @list : \@list;
     }
 
     sub add {
+        my ( $self, $entry ) = @_;
+        my $ident = ident($self);
+
+        if ( !ref $entry ) {
+            $entry = Text::Todo::Entry->new($entry);
+        }
+        elsif ( ref $entry ne 'Text::Todo::Entry' ) {
+            croak(
+                'entry is a ' . ref($entry) . ' not a Text::Todo::Entry!' );
+        }
+
+        push @{ $list_of{$ident} }, $entry;
+
+        return $entry;
+    }
+
+    sub del { 
+        my ( $self, $src ) = @_;
+        my $ident = ident($self);
+
+        my $id  = $self->_find_entry_id($src);
+
+        my @list = $self->list;
+        my $entry = splice( @list, $id, 1 );
+        $list_of{$ident} = \@list;
+
+        return $entry;
+    }
+
+    sub move {
+        my ( $self, $entry, $dst ) = @_;
+        my $ident = ident($self);
+
+        my $src  = $self->_find_entry_id($entry);
+        my @list = $self->list;
+
+        splice( @list, $dst, 0, splice( @list, $src, 1 ) );
+
+        $list_of{$ident} = \@list;
+
+        return 1;
+    }
+
+    sub listproj { 
+        my ( $self, $entry, $dst ) = @_;
+        my $ident = ident($self);
+
+        my %available_projects;
+        foreach my $e ($self->list) {
+            foreach my $p ( $e->projects ) {
+                $available_projects{$p} = 1;
+            }
+        }
+
+        my @projects = sort keys %available_projects;
+
+        return wantarray ? @projects : \@projects;
+    }
+
+    sub archive  { carp "unsupported\n", return }
+
+    sub addto    { carp "unsupported\n", return }
+    sub listfile { carp "unsupported\n", return }
+
+    sub _find_entry_id {
         my ( $self, $entry ) = @_;
         my $ident = ident($self);
 
@@ -104,14 +266,19 @@ use version; our $VERSION = qv('0.0.1');
                         . ref($entry)
                         . ' not a Text::Todo::Entry!' );
             }
+
+            my @list = $self->list;
+            foreach my $id ( 0 .. $#list ) {
+                if ( $list[$id] eq $entry ) {
+                    return $id;
+                }
+            }
         }
-        else {
-            $entry = Text::Todo::Entry->new($entry);
+        elsif ( $entry =~ /^\d+$/xms ) {
+            return $entry;
         }
 
-        push @{ $list_of{$ident} }, $entry;
-
-        return $entry;
+        croak "Invalid entry [$entry]!";
     }
 }
 
