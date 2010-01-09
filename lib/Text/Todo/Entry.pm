@@ -47,8 +47,6 @@ use version; our $VERSION = qv('0.0.1');
     }
 
     sub replace { _update_entry(@_) }
-    sub depri   { _set_priority( @_, '' ) }
-    sub pri     { _set_priority(@_) }
 
     sub new {
         my ( $class, $text ) = @_;
@@ -100,7 +98,9 @@ use version; our $VERSION = qv('0.0.1');
         return $text_of{$ident};
     }
 
-    sub _set_priority {
+    sub depri { pri( @_, '' ) }
+
+    sub pri {
         my ( $self, $new_pri ) = @_;
         my $ident = ident($self);
 
