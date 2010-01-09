@@ -1,6 +1,6 @@
 package Text::Todo::Entry;
 
-# $RedRiver: Entry.pm,v 1.8 2010/01/08 04:50:41 andrew Exp $
+# $RedRiver: Entry.pm,v 1.9 2010/01/08 17:41:56 andrew Exp $
 
 use warnings;
 use strict;
@@ -46,11 +46,9 @@ use version; our $VERSION = qv('0.0.1');
         };
     }
 
-    # Aliases
-    sub change  { _update_entry(@_) }
-    sub depri   { _set_priority( @_, '' ) }
-    sub pri     { priority(@_) }
     sub replace { _update_entry(@_) }
+    sub depri   { _set_priority( @_, '' ) }
+    sub pri     { _set_priority(@_) }
 
     sub new {
         my ( $class, $text ) = @_;
@@ -119,10 +117,6 @@ use version; our $VERSION = qv('0.0.1');
         my ( $self, $new_pri ) = @_;
         my $ident = ident($self);
 
-        if ($new_pri) {
-            return $self->_set_priority($new_pri);
-        }
-
         return $priority_of{$ident};
     }
 
@@ -134,7 +128,7 @@ use version; our $VERSION = qv('0.0.1');
 
         $new =~ s/$priority_completion_regex//xms;
 
-        if ( $self->done) {
+        if ( $self->done ) {
             push @new, $self->done;
         }
 
@@ -158,7 +152,7 @@ use version; our $VERSION = qv('0.0.1');
         my ($self) = @_;
         my $ident = ident($self);
 
-        if ( $self->done) {
+        if ( $self->done ) {
             return 1;
         }
 
@@ -227,7 +221,7 @@ This document describes Text::Todo::Entry version 0.0.1
 
 =head2 in_project
 
-=head2 change
+=head2 replace
 
 =head2 prepend
 
@@ -237,6 +231,9 @@ This document describes Text::Todo::Entry version 0.0.1
 
 =head2 done
 
+=head2 pri
+
+=head2 depri
 
 =head1 DIAGNOSTICS
 

@@ -7,7 +7,7 @@
 #       AUTHOR:  Andrew Fresh (AAF), andrew@cpan.org
 #      COMPANY:  Red River Communications
 #      CREATED:  07/10/09 11:32:39
-#     REVISION:  $RedRiver: entry.t,v 1.6 2010/01/08 04:44:54 andrew Exp $
+#     REVISION:  $RedRiver: entry.t,v 1.7 2010/01/08 17:41:56 andrew Exp $
 #===============================================================================
 
 use strict;
@@ -22,19 +22,19 @@ BEGIN: { use_ok( $class, "use $class" ) }
 diag("Testing entry $class $Text::Todo::Entry::VERSION");
 
 my %sample = (
-    text => '(B) @home @work send email to andrew@cpan.org +say_thanks',
-    priority    => 'B',
-    contexts    => [ 'home', 'work' ],
-    projects    => ['say_thanks'],
-    prepend     => 'before',
-    append      => 'or something',
+    text     => '(B) @home @work send email to andrew@cpan.org +say_thanks',
+    priority => 'B',
+    contexts => [ 'home', 'work' ],
+    projects => ['say_thanks'],
+    prepend  => 'before',
+    append   => 'or something',
     new_project => 'notnapping',
     new_context => 'car',
 );
 
 my $e = new_ok($class);
 
-ok( $e->change( $sample{text} ), 'Update entry' ); 
+ok( $e->replace( $sample{text} ), 'Update entry' );
 is( $e->text,     $sample{text},     'Make sure entry matches' );
 is( $e->priority, $sample{priority}, 'check priority' );
 is_deeply( [ $e->contexts ], $sample{contexts}, 'check contexts' );
@@ -70,27 +70,26 @@ ok( $e->in_context( $sample{new_context} ), 'now in new context' );
 
 $sample{text} =~ s/^\(B\)\s*/(A) /gxms;
 $sample{priority} = 'A';
-ok( $e->priority('A'), 'Set priority to A' );
-is( $e->text, $sample{text}, 'Make sure entry matches' );
-is( $e->priority, 'A', 'New priority is set' );
+ok( $e->pri('A'), 'Set priority to A' );
+is( $e->text,     $sample{text}, 'Make sure entry matches' );
+is( $e->priority, 'A',           'New priority is set' );
 
 $sample{text} =~ s/^\(A\)\s*//gxms;
 $sample{priority} = '';
 ok( $e->depri(), 'Deprioritize' );
-is( $e->text, $sample{text}, 'Make sure entry matches' );
-is( $e->priority, undef, 'New priority is set' );
+is( $e->text,     $sample{text}, 'Make sure entry matches' );
+is( $e->priority, undef,         'New priority is set' );
 
 ok( !$e->done, 'not done' );
-ok( $e->do, 'mark as done' );
+ok( $e->do,    'mark as done' );
 ok( $e->done,  'now done' );
 is( $e->text, 'x ' . $sample{text}, 'Make sure entry matches' );
 
-ok( $e->change(   '' ), 'Blank entry' );
+ok( $e->replace(''), 'Blank entry' );
 is( $e->text,     '',    'Make sure entry is blank' );
 is( $e->priority, undef, 'check priority is undef' );
 is_deeply( [ $e->contexts ], [], 'check contexts are empty' );
 is_deeply( [ $e->projects ], [], 'check projects are empty' );
-
 
 # replace
 # app => 'append',
