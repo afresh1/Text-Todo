@@ -1,6 +1,6 @@
 package Text::Todo::Entry;
 
-# $RedRiver: Entry.pm,v 1.12 2010/01/10 00:13:14 andrew Exp $
+# $RedRiver: Entry.pm,v 1.13 2010/01/10 01:03:02 andrew Exp $
 
 use warnings;
 use strict;
@@ -20,13 +20,11 @@ use version; our $VERSION = qv('0.0.1');
     my %known_tags_of;
 
     # XXX Should the completion (x) be case sensitive?
-    my $priority_completion_regex = qr/
+    my $priority_completion_regex = qr{
         ^ \s*
         (?i:   (x)        \s+)?
         (?i:\( ([A-Z]) \) \s+)?
-    /xms;
-
-    sub replace { _update_entry(@_) }
+    }xms;
 
     sub new {
         my ( $class, $options ) = @_;
@@ -73,12 +71,12 @@ use version; our $VERSION = qv('0.0.1');
             }
         }
 
-        $self->_update_entry( $options->{text} );
+        $self->replace( $options->{text} );
 
         return $self;
     }
 
-    sub _update_entry {
+    sub replace {
         my ( $self, $text ) = @_;
         my $ident = ident($self);
 
@@ -117,7 +115,7 @@ use version; our $VERSION = qv('0.0.1');
         return $text_of{$ident};
     }
 
-    sub depri { pri( $_[0], '' ) }
+    sub depri { my ($self) = @_; return $self->pri(q{}) }
 
     sub pri {
         my ( $self, $new_pri ) = @_;
@@ -159,15 +157,17 @@ use version; our $VERSION = qv('0.0.1');
             push @new, $addition;
         }
 
-        return $self->_update_entry( join q{ }, @new, $new );
+        return $self->replace( join q{ }, @new, $new );
     }
 
     sub append {
         my ( $self, $addition ) = @_;
-        return $self->_update_entry( join q{ }, $self->text, $addition );
+        return $self->replace( join q{ }, $self->text, $addition );
     }
 
-    sub do {
+    ## no critic 'homonym'
+    sub do {    # This is what it is called in todo.sh
+        ## use critic
         my ($self) = @_;
         my $ident = ident($self);
 
@@ -201,7 +201,7 @@ Text::Todo::Entry - An object for manipulating an entry on a Text::Todo list
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: Entry.pm,v 1.13 2010/01/10 01:03:02 andrew Exp $
+    $Id: Entry.pm,v 1.14 2010/01/10 01:41:40 andrew Exp $
 
 
 =head1 SYNOPSIS
