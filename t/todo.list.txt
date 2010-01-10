@@ -2,4 +2,5 @@
 entry 2 @two +dos
 
 x completed entry 4
-entry 5 +delete
+(B) entry 5 is priority
+entry 6 +delete
