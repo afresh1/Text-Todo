@@ -1,6 +1,6 @@
 package Text::Todo;
 
-# $RedRiver: Todo.pm,v 1.11 2010/01/10 01:01:45 andrew Exp $
+# $RedRiver: Todo.pm,v 1.12 2010/01/10 04:08:59 andrew Exp $
 
 use warnings;
 use strict;
@@ -28,7 +28,6 @@ use version; our $VERSION = qv('0.0.1');
             todo_dir    => undef,
             todo_file   => 'todo.txt',
             done_file   => undef,
-            report_file => undef,
         };
 
         if ($options) {
@@ -38,7 +37,7 @@ use version; our $VERSION = qv('0.0.1');
                         $self->_path_to( $opt, $options->{$opt} );
                     }
                     else {
-                        carp "Invalid option [$opt]";
+                        #carp "Invalid option [$opt]";
                     }
                 }
             }
@@ -374,7 +373,7 @@ Text::Todo - Perl interface to todo_txt files
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: Todo.pm,v 1.12 2010/01/10 04:08:59 andrew Exp $
+    $Id: Todo.pm,v 1.13 2010/01/10 07:07:46 andrew Exp $
 
 =head1 SYNOPSIS
 
