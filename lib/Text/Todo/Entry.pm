@@ -1,6 +1,6 @@
 package Text::Todo::Entry;
 
-# $RedRiver: Entry.pm,v 1.13 2010/01/10 01:03:02 andrew Exp $
+# $RedRiver: Entry.pm,v 1.14 2010/01/10 01:41:40 andrew Exp $
 
 use warnings;
 use strict;
@@ -22,8 +22,8 @@ use version; our $VERSION = qv('0.0.1');
     # XXX Should the completion (x) be case sensitive?
     my $priority_completion_regex = qr{
         ^ \s*
-        (?i:   (x)        \s+)?
-        (?i:\( ([A-Z]) \) \s+)?
+        (?i:   (x)        \s*)?
+        (?i:\( ([A-Z]) \) \s*)?
     }xms;
 
     sub new {
@@ -201,7 +201,7 @@ Text::Todo::Entry - An object for manipulating an entry on a Text::Todo list
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: Entry.pm,v 1.14 2010/01/10 01:41:40 andrew Exp $
+    $Id: Entry.pm,v 1.15 2010/01/10 01:45:52 andrew Exp $
 
 
 =head1 SYNOPSIS
