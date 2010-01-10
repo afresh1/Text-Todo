@@ -1,6 +1,6 @@
 package Text::Todo;
 
-# $RedRiver: Todo.pm,v 1.9 2010/01/09 06:54:15 andrew Exp $
+# $RedRiver: Todo.pm,v 1.10 2010/01/09 20:41:45 andrew Exp $
 
 use warnings;
 use strict;
@@ -366,7 +366,7 @@ Text::Todo - Perl interface to todo_txt files
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: Todo.pm,v 1.10 2010/01/09 20:41:45 andrew Exp $
+    $Id: Todo.pm,v 1.11 2010/01/10 01:01:45 andrew Exp $
 
 =head1 SYNOPSIS
 
@@ -566,6 +566,10 @@ None reported.
 =head1 BUGS AND LIMITATIONS
 
 No bugs have been reported.
+
+Limitations:
+
+Currently there isn't an easy way to print out line numbers with the entry. 
 
 Please report any bugs or feature requests to
 C<bug-text-todo@rt.cpan.org>, or through the web interface at
