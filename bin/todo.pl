@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $RedRiver: todo.pl,v 1.4 2010/01/10 23:26:04 andrew Exp $
+# $RedRiver: todo.pl,v 1.5 2010/01/10 23:37:12 andrew Exp $
 ########################################################################
 # todo.pl *** a perl version of todo.sh. Uses Text::Todo.
 #
@@ -85,7 +85,7 @@ if ( $opts{h} || !$action ) {
     usage( $opts{h} );
 }
 
-my @unsupported = grep { defined $opts{$_} } qw( @ + f h p P n t v V );
+my @unsupported = grep { defined $opts{$_} } qw( @ + f h p P t v V );
 if (@unsupported) {
     warn 'Unsupported options: ' . ( join q{, }, @unsupported ) . "\n";
 }
@@ -169,7 +169,33 @@ sub archive {
 }
 
 sub command   { return &unsupported }
-sub del       { return &unsupported }
+
+sub del { 
+    my ( $config, $line ) = @_;
+    if ( !( $line && $line =~ /^\d+$/xms ) ) {
+        die 'usage: todo.pl del ITEM#' . "\n";
+    }
+    my $todo = Text::Todo->new($config);
+    
+    my $entry = $todo->list->[$line - 1];
+    print "Delete '" . $entry->text . "'?  (y/n)\n";
+    warn "XXX No delete confirmation currently!\n";
+
+    if ($opts{n}) {
+        if ($todo->del($entry) && $todo->save) {
+            return print 'TODO: \'', $entry->text, "' deleted.\n";
+        }
+    }
+    else {
+        my $text = $entry->text;
+        if ($entry->replace(q{}) && $todo->save) {
+            return print 'TODO: \'', $text, "' deleted.\n";
+        }
+    }
+
+    die "Unable to delete entry\n";
+}
+
 sub depri     { return &unsupported }
 sub mark_done { return &unsupported }
 sub help      { return &unsupported }
