@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $RedRiver: todo.pl,v 1.1 2010/01/09 05:25:44 andrew Exp $
+# $RedRiver: todo.pl,v 1.2 2010/01/10 07:13:54 andrew Exp $
 ########################################################################
 # todo.pl *** a perl version of todo.sh. Uses Text::Todo.
 #
@@ -22,28 +22,34 @@ use version; our $VERSION = qv('0.0.1');
 
 # option defaults
 my $config_file = $ENV{HOME} . '/todo.cfg';
+CONFIG: foreach my $f ( $config_file, $ENV{HOME} . '/.todo.cfg', ) {
+    if ( -e $f ) {
+        $config_file = $f;
+        last CONFIG;
+    }
+}
 
 my %actions = (
-    add      => \&unsupported,
-    addto    => \&unsupported,
-    append   => \&unsupported,
-    archive  => \&unsupported,
-    command  => \&unsupported,
-    del      => \&unsupported,
-    depri    => \&unsupported,
-    do       => \&unsupported,
-    help     => \&unsupported,
+    add      => \&add,
+    addto    => \&addto,
+    append   => \&append,
+    archive  => \&archive,
+    command  => \&command,
+    del      => \&del,
+    depri    => \&depri,
+    do       => \&mark_done,
+    help     => \&help,
     list     => \&list,
-    listall  => \&unsupported,
-    listcon  => \&unsupported,
-    listfile => \&unsupported,
-    listpri  => \&unsupported,
-    listproj => \&unsupported,
-    move     => \&unsupported,
-    prepend  => \&unsupported,
-    pri      => \&unsupported,
-    replace  => \&unsupported,
-    report   => \&unsupported,
+    listall  => \&listall,
+    listcon  => \&listcon,
+    listfile => \&listfile,
+    listpri  => \&listpri,
+    listproj => \&listproj,
+    move     => \&move,
+    prepend  => \&prepend,
+    pri      => \&pri,
+    replace  => \&replace,
+    report   => \&report,
 );
 
 my %aliases = (
@@ -55,7 +61,7 @@ my %aliases = (
     lsa   => 'listall',
     lsc   => 'listcon',
     lf    => 'listfile',
-    lsp   => 'listri',
+    lsp   => 'listpri',
     lsprj => 'listproj',
     mv    => 'move',
     prep  => 'prepend',
@@ -81,7 +87,7 @@ if ( $opts{h} || !$action ) {
 
 my @unsupported = grep { defined $opts{$_} } qw( @ + f h p P n t v V );
 if (@unsupported) {
-    die 'Unsupported options: ' . ( join q{, }, @unsupported ) . "\n";
+    warn 'Unsupported options: ' . ( join q{, }, @unsupported ) . "\n";
 }
 
 if ( $opts{d} ) {
@@ -96,14 +102,167 @@ else {
     usage();
 }
 
+sub add {
+    my ( $config, $entry ) = @_;
+    if ( !$entry ) {
+        die "usage: todo.pl add 'item'\n";
+    }
+
+    my $todo = Text::Todo->new($config);
+    if ( $todo->add($entry) ) {
+        my @list  = $todo->list;
+        my $lines = scalar @list;
+
+        print "TODO: '$entry' added on line $lines\n";
+
+        return $lines;
+    }
+    die "Unable to add [$entry]\n";
+}
+
+sub addto {
+    my ( $config, $file, $entry ) = @_;
+    if ( !( $file && $entry ) ) {
+        die "usage: todo.pl addto DEST 'TODO ITEM'\n";
+    }
+
+    my $todo = Text::Todo->new($config);
+
+    $file = $todo->file($file);
+    if ( $todo->addto( $file, $entry ) ) {
+        my @list  = $todo->listfile($file);
+        my $lines = scalar @list;
+
+        print "TODO: '$entry' added to $file on line $lines\n";
+
+        return $lines;
+    }
+    die "Unable to add [$entry]\n";
+}
+
+sub append    { return &unsupported }
+sub archive   { return &unsupported }
+sub command   { return &unsupported }
+sub del       { return &unsupported }
+sub depri     { return &unsupported }
+sub mark_done { return &unsupported }
+sub help      { return &unsupported }
+
 sub list {
+    my ( $config, $term ) = @_;
+    my $todo = Text::Todo->new($config);
+
+    my @list = _number_list( $todo->list );
+    my $shown = _show_sorted_list( $term, @list );
+
+    return _show_list_footer( $shown, scalar @list, $config->{todo_file} );
+}
+
+sub listall {
+    my ( $config, $term ) = @_;
+    my $todo = Text::Todo->new($config);
+
+    my @list = _number_list(
+        $todo->listfile('todo_file'),
+        $todo->listfile('done_file'),
+    );
+    my $shown = _show_sorted_list( $term, @list );
+
+    return _show_list_footer( $shown, scalar @list, $config->{'todo_dir'} );
+}
+
+sub listcon {
     my ($config) = @_;
     my $todo = Text::Todo->new($config);
-    $todo->load( $config->{todo_file} ) || die "Couldn't load todo_file\n";
+    return print map {"\@$_\n"} $todo->listcon;
+}
 
-    foreach my $entry ( sort { lc $a->text cmp lc $b->text } $todo->list ) {
-        print $entry->text, "\n" or warn "Couldn't print: \n";
+sub listfile {
+    my ( $config, $file, $term ) = @_;
+    if ( !$file ) {
+        die "usage: todo.pl listfile SRC [TERM]\n";
     }
+    my $todo = Text::Todo->new($config);
+
+    my @list = _number_list( $todo->listfile($file) );
+    my $shown = _show_sorted_list( $term, @list );
+
+    return _show_list_footer( $shown, scalar @list, $file );
+}
+
+sub listpri {
+    my ( $config, $pri ) = @_;
+
+    my $todo = Text::Todo->new($config);
+
+    my @list = _number_list( $todo->listfile('todo_file') );
+    my @pri_list;
+    if ($pri) {
+        $pri = uc $pri;
+        if ( $pri !~ /^[A-Z]$/xms ) {
+            die "usage: todo.pl listpri PRIORITY\n",
+                "note: PRIORITY must a single letter from A to Z.\n";
+        }
+        @pri_list = grep {
+            defined $_->{entry}->priority
+                && $_->{entry}->priority eq $pri
+        } @list;
+    }
+    else {
+        @pri_list = grep { $_->{entry}->priority } @list;
+    }
+
+    my $shown = _show_sorted_list( undef, @pri_list );
+
+    return _show_list_footer( $shown, scalar @list, $config->{todo_file} );
+}
+
+sub listproj {
+    my ($config) = @_;
+    my $todo = Text::Todo->new($config);
+    return print map {"\+$_\n"} $todo->listproj;
+}
+
+sub move    { return &unsupported }
+sub prepend { return &unsupported }
+sub pri     { return &unsupported }
+sub replace { return &unsupported }
+sub report  { return &unsupported }
+
+sub _number_list {
+    my (@list) = @_;
+
+    my $line = 1;
+    return map { { line => $line++, entry => $_, } } @list;
+}
+
+sub _show_sorted_list {
+    my ( $term, @list ) = @_;
+    $term = defined $term ? quotemeta($term) : '';
+
+    my $shown = 0;
+    foreach my $e (
+        sort { lc $a->{entry}->text cmp lc $b->{entry}->text }
+        grep { $_->{entry}->text =~ /$term/xms } @list
+        )
+    {
+        printf "%02d %s\n", $e->{line}, $e->{entry}->text;
+        $shown++;
+    }
+
+    return $shown;
+}
+
+sub _show_list_footer {
+    my ( $shown, $total, $file ) = @_;
+
+    $shown ||= 0;
+    $total ||= 0;
+
+    print "-- \n";
+    print "TODO: $shown of $total tasks shown from $file\n";
+
+    return 1;
 }
 
 sub unsupported { die "Unsupported action\n" }
@@ -114,11 +273,11 @@ sub usage {
     print <<'EOL';
   * command list taken from todo.sh for compatibility
   Usage: todo.pl [-fhpantvV] [-d todo_config] action
-
 EOL
 
     if ($long) {
         print <<'EOL';
+
   Actions:
     add|a "THING I NEED TO DO +project @context"
     addto DEST "TEXT TO ADD"
@@ -155,7 +314,7 @@ sub read_config {
     my ($file) = @_;
 
     my %config;
-    open my $fh, '<', $file or die "Unable to open [$file]: $!";
+    open my $fh, '< ', $file or die "Unable to open [$file]: $!";
 LINE: while (<$fh>) {
         s/\r?\n$//xms;
         s/\s*\#.*$//xms;
