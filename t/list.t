@@ -8,7 +8,7 @@
 #       AUTHOR:  Andrew Fresh (AAF), andrew@cpan.org
 #      COMPANY:  Red River Communications
 #      CREATED:  01/07/10 19:11
-#     REVISION:  $RedRiver: list.t,v 1.5 2010/01/09 07:02:35 andrew Exp $
+#     REVISION:  $RedRiver: list.t,v 1.6 2010/01/10 04:28:49 andrew Exp $
 #===============================================================================
 
 use strict;
@@ -127,4 +127,4 @@ is( $done[-1]->text, 'added text', 'make sure what we added is there' );
 is( $done[-2]->text, $entry_to_archive->text,
     'make sure it moved to the archive' );
 
-done_testing();
+#done_testing();
