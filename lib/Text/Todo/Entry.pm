@@ -1,6 +1,6 @@
 package Text::Todo::Entry;
 
-# $RedRiver: Entry.pm,v 1.14 2010/01/10 01:41:40 andrew Exp $
+# $RedRiver: Entry.pm,v 1.15 2010/01/10 01:45:52 andrew Exp $
 
 use warnings;
 use strict;
@@ -87,7 +87,7 @@ use version; our $VERSION = qv('0.0.1');
         foreach my $tag ( keys %{ $known_tags_of{$ident} } ) {
             my $symbol = quotemeta $known_tags_of{$ident}{$tag};
             $tags_of{$ident}{$tag} = { map { $_ => q{} }
-                    $text =~ / (?:^|\s) $symbol  (\S+)/gxms };
+                    $text =~ / (?:^|\s) $symbol  (\S*)/gxms };
         }
         ( $completion_status_of{$ident}, $priority_of{$ident} )
             = $text =~ / $priority_completion_regex /xms;
@@ -201,7 +201,7 @@ Text::Todo::Entry - An object for manipulating an entry on a Text::Todo list
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: Entry.pm,v 1.15 2010/01/10 01:45:52 andrew Exp $
+    $Id: Entry.pm,v 1.16 2010/01/10 22:49:53 andrew Exp $
 
 
 =head1 SYNOPSIS
