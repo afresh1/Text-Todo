@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $RedRiver: todo.pl,v 1.2 2010/01/10 07:13:54 andrew Exp $
+# $RedRiver: todo.pl,v 1.3 2010/01/10 22:59:16 andrew Exp $
 ########################################################################
 # todo.pl *** a perl version of todo.sh. Uses Text::Todo.
 #
@@ -140,7 +140,21 @@ sub addto {
     die "Unable to add [$entry]\n";
 }
 
-sub append    { return &unsupported }
+sub append {
+    my ( $config, $line, $text ) = @_;
+    if ( !( $line && $text && $line =~ /^\d+$/xms ) ) {
+        die 'usage: todo.pl append ITEM# "TEXT TO APPEND"' . "\n";
+    }
+
+    my $todo  = Text::Todo->new($config);
+    my $entry = $todo->list->[ $line - 1 ];
+
+    if ( $entry->append($text) && $todo->save ) {
+        return printf "%02d: %s\n", $line, $entry->text;
+    }
+    die "Unable to append\n";
+}
+
 sub archive   { return &unsupported }
 sub command   { return &unsupported }
 sub del       { return &unsupported }
@@ -241,12 +255,12 @@ sub _show_sorted_list {
     $term = defined $term ? quotemeta($term) : '';
 
     my $shown = 0;
-    foreach my $e (
-        sort { lc $a->{entry}->text cmp lc $b->{entry}->text }
-        grep { $_->{entry}->text =~ /$term/xms } @list
-        )
-    {
-        printf "%02d %s\n", $e->{line}, $e->{entry}->text;
+    my @sorted
+        = map { sprintf "%02d %s", $_->{line}, $_->{entry}->text }
+        sort { lc $a->{entry}->text cmp lc $b->{entry}->text } @list;
+
+    foreach my $line ( grep {/$term/xms} @sorted ) {
+        print $line, "\n";
         $shown++;
     }
 
