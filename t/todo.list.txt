@@ -1,4 +1,5 @@
 (A) entry 1 @one +uno
 entry 2 @two +dos
-x completed entry 3
-entry 4 +delete
+
+x completed entry 4
+entry 5 +delete

@@ -8,13 +8,13 @@
 #       AUTHOR:  Andrew Fresh (AAF), andrew@cpan.org
 #      COMPANY:  Red River Communications
 #      CREATED:  01/07/10 19:11
-#     REVISION:  $RedRiver: list.t,v 1.4 2010/01/09 06:54:15 andrew Exp $
+#     REVISION:  $RedRiver: list.t,v 1.5 2010/01/09 07:02:35 andrew Exp $
 #===============================================================================
 
 use strict;
 use warnings;
 
-use Test::More tests => 47;
+use Test::More tests => 49;
 
 use File::Temp qw/ tempdir /;
 use Data::Dumper;
@@ -100,9 +100,9 @@ ok( @projects = $copy->listproj, 'listproj for current list' );
 is_deeply( \@projects, [ 'dos', 'uno' ], 'got the projects we expected' );
 
 my $entry_to_archive;
-ok( $entry_to_archive = $copy->list->[1], 'read entry_to_archive' );
+ok( $entry_to_archive = $copy->list->[3], 'read entry_to_archive' );
 is( $entry_to_archive->text,
-    'x completed entry 3',
+    'x completed entry 4',
     'make sure we got the right entry'
 );
 
