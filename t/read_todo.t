@@ -8,14 +8,14 @@
 #       AUTHOR:  Andrew Fresh (AAF), andrew@cpan.org
 #      COMPANY:  Red River Communications
 #      CREATED:  07/09/09 11:45:52
-#     REVISION:  $RedRiver: read_todo.t,v 1.3 2010/01/06 19:54:56 andrew Exp $
+#     REVISION:  $RedRiver: read_todo.t,v 1.4 2010/01/08 23:06:09 andrew Exp $
 #===============================================================================
 
 use strict;
 use warnings;
 use File::Spec;
 use File::Temp qw/ tempdir /;
-use Test::More tests => 106;
+use Test::More tests => 122;
 
 my $todo_file = File::Spec->catfile( 't', 'todo1.txt' );
 my $tempdir = tempdir( 'todotxt-XXXXXXX', CLEANUP => 1 );
@@ -28,38 +28,44 @@ my @todos = (
         priority => 'B',
         contexts => ['phone'],
         projects => ['GarageSale'],
-        do => undef,
+        done     => undef,
     },
     {   text =>
             '+GarageSale @home post signs around the neighborhood DUE:2006-08-01',
         priority => undef,
         contexts => ['home'],
         projects => ['GarageSale'],
-        do => undef,
+        done     => undef,
     },
     {   text     => 'X eat meatballs @home',
         priority => undef,
         contexts => ['home'],
         projects => [],
-        do => 'X',
+        done     => 'X',
     },
     {   text     => '(A) @phone thank Mom for the meatballs WAIT',
         priority => 'A',
         contexts => ['phone'],
         projects => [],
-        do => undef,
+        done     => undef,
+    },
+    {   text     => '',
+        priority => undef,
+        contexts => [],
+        projects => [],
+        done     => undef,
     },
     {   text     => '@shopping Eskimo pies',
         priority => undef,
         contexts => ['shopping'],
         projects => [],
-        do => undef,
+        done     => undef,
     },
     {   text     => 'email andrew@cpan.org for help +report_bug @wherever',
         priority => undef,
         contexts => ['wherever'],
         projects => ['report_bug'],
-        do => undef,
+        done     => undef,
     },
 );
 
@@ -68,7 +74,7 @@ my %extra_todo = (
     priority => undef,
     contexts => ['continually'],
     projects => ['test+everything'],
-    do => undef,
+    done     => undef,
 );
 
 BEGIN: { use_ok( 'Text::Todo', 'use Text::Todo' ) }
@@ -101,24 +107,24 @@ foreach my $t ( $todo, $dup_todo, $new_todo ) {
     ok( $list = $t->list, 'Get list from ' . $file );
 
     for my $id ( 0 .. $#todos ) {
-        test_todo( $todos[$id], $list->[$id], $id);
+        test_todo( $todos[$id], $list->[$id], $id );
     }
 }
 
 sub test_todo {
-    my ($sample, $read, $id) = @_;
+    my ( $sample, $read, $id ) = @_;
 
-        is( $read->text,      $sample->{text},     "check text [$id]" );
-        is( $read->priority,  $sample->{priority}, "check priority [$id]" );
-        is( $read->done, $sample->{do}, "check completion [$id]" );
-        is_deeply(
-            [ $read->contexts ],
-            $sample->{contexts},
-            "check contexts [$id]"
-        );
-        is_deeply(
-            [ $read->projects ],
-            $sample->{projects},
-            "check projects [$id]"
-        );
-    }
+    is( $read->text,     $sample->{text},     "check text [$id]" );
+    is( $read->priority, $sample->{priority}, "check priority [$id]" );
+    is( $read->done,     $sample->{done},     "check completion [$id]" );
+    is_deeply(
+        [ $read->contexts ],
+        $sample->{contexts},
+        "check contexts [$id]"
+    );
+    is_deeply(
+        [ $read->projects ],
+        $sample->{projects},
+        "check projects [$id]"
+    );
+}

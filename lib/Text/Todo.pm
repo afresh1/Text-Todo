@@ -1,6 +1,6 @@
 package Text::Todo;
 
-# $RedRiver: Todo.pm,v 1.10 2010/01/09 20:41:45 andrew Exp $
+# $RedRiver: Todo.pm,v 1.11 2010/01/10 01:01:45 andrew Exp $
 
 use warnings;
 use strict;
@@ -160,7 +160,6 @@ use version; our $VERSION = qv('0.0.1');
         open my $fh, '<', $file or croak "Couldn't open [$file]: $!";
         while (<$fh>) {
             s/\r?\n$//xms;
-            next if !length $_;
             push @list, Text::Todo::Entry->new($_);
         }
         close $fh or croak "Couldn't close [$file]: $!";
@@ -276,24 +275,33 @@ use version; our $VERSION = qv('0.0.1');
             return;
         }
 
-        my $archived = 0;
+        my $changed = 0;
     ENTRY: foreach my $e ( $self->list ) {
             if ( $e->done ) {
                 if ( $self->addto( 'done_file', $e ) && $self->del($e) ) {
-                    $archived++;
+                    $changed++;
                 }
                 else {
                     carp q{Couldn't archive entry [} . $e->text . ']';
                     last ENTRY;
                 }
             }
+            elsif ($e->text eq q{}) {
+                if ($self->del($e)) {
+                    $changed++;
+                }
+                else {
+                    carp q{Couldn't delete blank entry};
+                    last ENTRY;
+                }
+            }
         }
 
-        if ($archived) {
+        if ($changed) {
             $self->save;
         }
 
-        return $archived;
+        return $changed;
     }
 
     sub addto {
@@ -366,7 +374,7 @@ Text::Todo - Perl interface to todo_txt files
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: Todo.pm,v 1.11 2010/01/10 01:01:45 andrew Exp $
+    $Id: Todo.pm,v 1.12 2010/01/10 04:08:59 andrew Exp $
 
 =head1 SYNOPSIS
 

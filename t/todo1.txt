@@ -2,5 +2,6 @@
 +GarageSale @home post signs around the neighborhood DUE:2006-08-01
 X eat meatballs @home
 (A) @phone thank Mom for the meatballs WAIT
+
 @shopping Eskimo pies
 email andrew@cpan.org for help +report_bug @wherever
