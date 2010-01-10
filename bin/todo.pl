@@ -103,10 +103,12 @@ else {
 }
 
 sub add {
-    my ( $config, $entry ) = @_;
-    if ( !$entry ) {
+    my ( $config, @entry ) = @_;
+    if ( !@entry ) {
         die "usage: todo.pl add 'item'\n";
     }
+
+    my $entry = join q{ }, @entry;
 
     my $todo = Text::Todo->new($config);
     if ( $todo->add($entry) ) {
@@ -121,10 +123,12 @@ sub add {
 }
 
 sub addto {
-    my ( $config, $file, $entry ) = @_;
-    if ( !( $file && $entry ) ) {
+    my ( $config, $file, @entry ) = @_;
+    if ( !( $file && @entry ) ) {
         die "usage: todo.pl addto DEST 'TODO ITEM'\n";
     }
+
+    my $entry = join q{ }, @entry;
 
     my $todo = Text::Todo->new($config);
 
@@ -141,10 +145,12 @@ sub addto {
 }
 
 sub append {
-    my ( $config, $line, $text ) = @_;
-    if ( !( $line && $text && $line =~ /^\d+$/xms ) ) {
+    my ( $config, $line, @text) = @_;
+    if ( !( $line && @text && $line =~ /^\d+$/xms ) ) {
         die 'usage: todo.pl append ITEM# "TEXT TO APPEND"' . "\n";
     }
+
+    my $text = join q{ }, @text;
 
     my $todo  = Text::Todo->new($config);
     my $entry = $todo->list->[ $line - 1 ];
