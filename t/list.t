@@ -8,13 +8,13 @@
 #       AUTHOR:  Andrew Fresh (AAF), andrew@cpan.org
 #      COMPANY:  Red River Communications
 #      CREATED:  01/07/10 19:11
-#     REVISION:  $RedRiver: list.t,v 1.6 2010/01/10 04:28:49 andrew Exp $
+#     REVISION:  $RedRiver: list.t,v 1.7 2010/01/10 19:29:17 andrew Exp $
 #===============================================================================
 
 use strict;
 use warnings;
 
-use Test::More tests => 49;
+use Test::More tests => 53;
 
 use File::Temp qw/ tempdir /;
 use Data::Dumper;
@@ -64,7 +64,7 @@ for my $id ( 0 .. $#orig_list ) {
 $orig = undef;
 
 my @pri_list;
-ok( @pri_list = $copy->listpri, 'list priority item' );
+ok( @pri_list = $copy->listpri('A'), 'list priority item' );
 is( scalar @pri_list, 1, 'only 1 item in the priority list' );
 is( $pri_list[0]->text, '(A) entry 1 @one +uno', 'priority item is correct' );
 
@@ -98,6 +98,10 @@ for my $id ( 0 .. $#copy_list ) {
 
 ok( @projects = $copy->listproj, 'listproj for current list' );
 is_deeply( \@projects, [ 'dos', 'uno' ], 'got the projects we expected' );
+
+my @contexts;
+ok( @contexts = $copy->listcon, 'listcon for current list' );
+is_deeply( \@contexts, [ 'one', 'two' ], 'got the contexts we expected' );
 
 my $entry_to_archive;
 ok( $entry_to_archive = $copy->list->[3], 'read entry_to_archive' );

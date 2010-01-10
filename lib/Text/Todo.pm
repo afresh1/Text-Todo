@@ -1,6 +1,6 @@
 package Text::Todo;
 
-# $RedRiver: Todo.pm,v 1.12 2010/01/10 04:08:59 andrew Exp $
+# $RedRiver: Todo.pm,v 1.13 2010/01/10 07:07:46 andrew Exp $
 
 use warnings;
 use strict;
@@ -25,9 +25,9 @@ use version; our $VERSION = qv('0.0.1');
         my $ident = ident($self);
 
         $path_of{$ident} = {
-            todo_dir    => undef,
-            todo_file   => 'todo.txt',
-            done_file   => undef,
+            todo_dir  => undef,
+            todo_file => 'todo.txt',
+            done_file => undef,
         };
 
         if ($options) {
@@ -37,6 +37,7 @@ use version; our $VERSION = qv('0.0.1');
                         $self->_path_to( $opt, $options->{$opt} );
                     }
                     else {
+
                         #carp "Invalid option [$opt]";
                     }
                 }
@@ -196,9 +197,20 @@ use version; our $VERSION = qv('0.0.1');
     }
 
     sub listpri {
-        my ($self) = @_;
+        my ( $self, $pri ) = @_;
 
-        my @list = grep { $_->priority } $self->list;
+        my @list;
+        if ($pri) {
+            $pri = uc $pri;
+            if ( $pri !~ /^[A-Z]$/xms ) {
+                croak "PRIORITY must a single letter from A to Z.";
+            }
+            @list = grep { defined $_->priority && $_->priority eq $pri }
+                $self->list;
+        }
+        else {
+            @list = grep { $_->priority } $self->list;
+        }
 
         return wantarray ? @list : \@list;
     }
@@ -248,19 +260,31 @@ use version; our $VERSION = qv('0.0.1');
     }
 
     sub listproj {
-        my ( $self, $entry, $dst ) = @_;
-        my $ident = ident($self);
+        my ( $self ) = @_;
+        return $self->listtag('project');
+    }
 
-        my %available_projects;
+    sub listcon {
+        my ( $self ) = @_;
+        return $self->listtag('context');
+    }
+
+    sub listtag {
+        my ( $self, $tag ) = @_;
+        my $ident = ident($self);
+        
+        my $accessor = $tag . 's';
+
+        my %available;
         foreach my $e ( $self->list ) {
-            foreach my $p ( $e->projects ) {
-                $available_projects{$p} = 1;
+            foreach my $p ( $e->$accessor ) {
+                $available{$p} = 1;
             }
         }
 
-        my @projects = sort keys %available_projects;
+        my @tags = sort keys %available;
 
-        return wantarray ? @projects : \@projects;
+        return wantarray ? @tags: \@tags;
     }
 
     sub archive {
@@ -285,8 +309,8 @@ use version; our $VERSION = qv('0.0.1');
                     last ENTRY;
                 }
             }
-            elsif ($e->text eq q{}) {
-                if ($self->del($e)) {
+            elsif ( $e->text eq q{} ) {
+                if ( $self->del($e) ) {
                     $changed++;
                 }
                 else {
@@ -373,7 +397,7 @@ Text::Todo - Perl interface to todo_txt files
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: Todo.pm,v 1.13 2010/01/10 07:07:46 andrew Exp $
+    $Id: Todo.pm,v 1.14 2010/01/10 22:39:26 andrew Exp $
 
 =head1 SYNOPSIS
 
