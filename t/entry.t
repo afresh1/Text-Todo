@@ -7,7 +7,7 @@
 #       AUTHOR:  Andrew Fresh (AAF), andrew@cpan.org
 #      COMPANY:  Red River Communications
 #      CREATED:  07/10/09 11:32:39
-#     REVISION:  $RedRiver: entry.t,v 1.7 2010/01/08 17:41:56 andrew Exp $
+#     REVISION:  $RedRiver: entry.t,v 1.8 2010/01/09 07:07:31 andrew Exp $
 #===============================================================================
 
 use strict;
@@ -22,10 +22,10 @@ BEGIN: { use_ok( $class, "use $class" ) }
 diag("Testing entry $class $Text::Todo::Entry::VERSION");
 
 my %sample = (
-    text     => '(B) @home @work send email to andrew@cpan.org +say_thanks',
+    text     => '(B) @home @work send email to andrew@cpan.org + +say_thanks',
     priority => 'B',
     contexts => [ 'home', 'work' ],
-    projects => ['say_thanks'],
+    projects => [ '', 'say_thanks' ],
     prepend  => 'before',
     append   => 'or something',
     new_project => 'notnapping',
