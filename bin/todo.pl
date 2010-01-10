@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $RedRiver: todo.pl,v 1.3 2010/01/10 22:59:16 andrew Exp $
+# $RedRiver: todo.pl,v 1.4 2010/01/10 23:26:04 andrew Exp $
 ########################################################################
 # todo.pl *** a perl version of todo.sh. Uses Text::Todo.
 #
@@ -155,7 +155,19 @@ sub append {
     die "Unable to append\n";
 }
 
-sub archive   { return &unsupported }
+sub archive { 
+    my ( $config ) = @_;
+    my $todo = Text::Todo->new($config);
+    
+    my $file = $todo->file;
+
+    my $archived = $todo->archive;
+    if (defined $archived) {
+        return print "TODO: $file archived.\n";
+    }
+    die "Unable to archive $file\n";
+}
+
 sub command   { return &unsupported }
 sub del       { return &unsupported }
 sub depri     { return &unsupported }
