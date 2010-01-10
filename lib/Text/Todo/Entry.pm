@@ -1,6 +1,6 @@
 package Text::Todo::Entry;
 
-# $RedRiver: Entry.pm,v 1.11 2010/01/09 07:08:45 andrew Exp $
+# $RedRiver: Entry.pm,v 1.12 2010/01/10 00:13:14 andrew Exp $
 
 use warnings;
 use strict;
@@ -17,11 +17,7 @@ use version; our $VERSION = qv('0.0.1');
     my %tags_of;
     my %priority_of;
     my %completion_status_of;
-
-    my %tags = (
-        context => q{@},
-        project => q{+},
-    );
+    my %known_tags_of;
 
     # XXX Should the completion (x) be case sensitive?
     my $priority_completion_regex = qr/
@@ -30,31 +26,54 @@ use version; our $VERSION = qv('0.0.1');
         (?i:\( ([A-Z]) \) \s+)?
     /xms;
 
-    for my $tag ( keys %tags ) {
-        ## no critic strict
-        no strict 'refs';    # Violates use strict, but allows code generation
-        ## use critic
-
-        *{ $tag . 's' } = sub {
-            my ($self) = @_;
-            return $self->_tags($tag);
-        };
-
-        *{ 'in_' . $tag } = sub {
-            my ( $self, $item ) = @_;
-            return $self->_is_in( $tag . 's', $item );
-        };
-    }
-
     sub replace { _update_entry(@_) }
 
     sub new {
-        my ( $class, $text ) = @_;
+        my ( $class, $options ) = @_;
 
         my $self = bless anon_scalar(), $class;
         my $ident = ident($self);
 
-        $self->_update_entry($text);
+        if ( !ref $options ) {
+            $options = { text => $options };
+        }
+        elsif ( ref $options ne 'HASH' ) {
+            croak 'Invalid parameter passed!';
+        }
+
+        $known_tags_of{$ident} = {
+            context => q{@},
+            project => q{+},
+        };
+
+        if ( exists $options->{tags} && ref $options->{tags} eq 'HASH' ) {
+            foreach my $k ( keys %{ $options->{tags} } ) {
+                $known_tags_of{$ident}{$k} = $options->{tags}->{$k};
+            }
+        }
+
+        for my $tag ( keys %{ $known_tags_of{$ident} } ) {
+            ## no critic strict
+            no strict
+                'refs';    # Violates use strict, but allows code generation
+            ## use critic
+
+            if ( !$self->can( $tag . 's' ) ) {
+                *{ $tag . 's' } = sub {
+                    my ($self) = @_;
+                    return $self->_tags($tag);
+                };
+            }
+
+            if ( !$self->can( 'in_' . $tag ) ) {
+                *{ 'in_' . $tag } = sub {
+                    my ( $self, $item ) = @_;
+                    return $self->_is_in( $tag . 's', $item );
+                };
+            }
+        }
+
+        $self->_update_entry( $options->{text} );
 
         return $self;
     }
@@ -67,8 +86,8 @@ use version; our $VERSION = qv('0.0.1');
 
         $text_of{$ident} = $text;
 
-        foreach my $tag ( keys %tags ) {
-            my $symbol = quotemeta $tags{$tag};
+        foreach my $tag ( keys %{ $known_tags_of{$ident} } ) {
+            my $symbol = quotemeta $known_tags_of{$ident}{$tag};
             $tags_of{$ident}{$tag} = { map { $_ => q{} }
                     $text =~ / (?:^|\s) $symbol  (\S+)/gxms };
         }
@@ -182,7 +201,7 @@ Text::Todo::Entry - An object for manipulating an entry on a Text::Todo list
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: Entry.pm,v 1.12 2010/01/10 00:13:14 andrew Exp $
+    $Id: Entry.pm,v 1.13 2010/01/10 01:03:02 andrew Exp $
 
 
 =head1 SYNOPSIS
@@ -212,9 +231,15 @@ For more information see L<http://todotxt.com>
 
 Creates an entry that can be manipulated.
 
-    my $entry = Text::Todo::Entry->new(['text of entry']);
+    my $entry = Text::Todo::Entry->new([
+    'text of entry' | { 
+        [ text => 'text of entry' ,]  
+        [ tags => { additional_arg => 'identfier' }, ]
+    } ]);
 
 If you don't pass any text, creates a blank entry. 
+
+See tags below for a description of additional tags.
 
 =head2 text
 
@@ -249,6 +274,24 @@ Returns the priority of an entry which may be an empty string if it is
 Each tag type generates two accessor functions {tag}s and in_{tag}.
 
 Current tags are context (@) and project (+).
+
+When creating a new object you can pass in new tags to recognize.
+
+    my $entry = Text::Todo::Entry->new({ 
+        text => 'do something DUE:2011-01-01',
+        tags => { due_date => 'DUE:' } 
+    });
+
+    my @due_dates = $entry->due_dates;
+
+then @due_dates eq ( '2011-01-01' );
+
+and you could also:
+
+    if ($entry->in_due_date('2011-01-01')) {
+        # do something
+    }
+
 
 =over
 
