@@ -20,3 +20,4 @@ t/special_tags.t
 t/todo.cfg
 t/todo.list.txt
 t/todo1.txt
+META.yml
