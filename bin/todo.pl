@@ -145,7 +145,7 @@ sub addto {
 }
 
 sub append {
-    my ( $config, $line, @text) = @_;
+    my ( $config, $line, @text ) = @_;
     if ( !( $line && @text && $line =~ /^\d+$/xms ) ) {
         die 'usage: todo.pl append ITEM# "TEXT TO APPEND"' . "\n";
     }
@@ -161,40 +161,40 @@ sub append {
     die "Unable to append\n";
 }
 
-sub archive { 
-    my ( $config ) = @_;
+sub archive {
+    my ($config) = @_;
     my $todo = Text::Todo->new($config);
-    
+
     my $file = $todo->file;
 
     my $archived = $todo->archive;
-    if (defined $archived) {
+    if ( defined $archived ) {
         return print "TODO: $file archived.\n";
     }
     die "Unable to archive $file\n";
 }
 
-sub command   { return &unsupported }
+sub command { return &unsupported }
 
-sub del { 
+sub del {
     my ( $config, $line ) = @_;
     if ( !( $line && $line =~ /^\d+$/xms ) ) {
         die 'usage: todo.pl del ITEM#' . "\n";
     }
     my $todo = Text::Todo->new($config);
-    
+
     my $entry = $todo->list->[$line - 1];
     print "Delete '" . $entry->text . "'?  (y/n)\n";
     warn "XXX No delete confirmation currently!\n";
 
-    if ($opts{n}) {
-        if ($todo->del($entry) && $todo->save) {
+    if ( $opts{n} ) {
+        if ( $todo->del($entry) && $todo->save ) {
             return print 'TODO: \'', $entry->text, "' deleted.\n";
         }
     }
     else {
         my $text = $entry->text;
-        if ($entry->replace(q{}) && $todo->save) {
+        if ( $entry->replace(q{}) && $todo->save ) {
             return print 'TODO: \'', $text, "' deleted.\n";
         }
     }
@@ -202,7 +202,21 @@ sub del {
     die "Unable to delete entry\n";
 }
 
-sub depri     { return &unsupported }
+sub depri {
+    my ( $config, $line ) = @_;
+    if ( !( $line && $line =~ /^\d+$/xms ) ) {
+        die 'usage: todo.pl del ITEM#' . "\n";
+    }
+    my $todo = Text::Todo->new($config);
+
+    my $entry = $todo->list->[ $line - 1 ];
+    if ( $entry->depri && $todo->save ) {
+        return print $line, ': ', $entry->text, "\n",
+            'TODO: ', $line, " deprioritized.\n";
+    }
+    die "Unable to deprioritize entry\n";
+}
+
 sub mark_done { return &unsupported }
 sub help      { return &unsupported }
 
@@ -286,7 +300,7 @@ sub move    { return &unsupported }
 sub prepend {
     my ( $config, $line, @text) = @_;
     if ( !( $line && @text && $line =~ /^\d+$/xms ) ) {
-        die 'usage: todo.pl prepend ITEM# "TEXT TO APPEND"' . "\n";
+        die 'usage: todo.pl prepend ITEM# "TEXT TO PREPEND"' . "\n";
     }
 
     my $text = join q{ }, @text;
@@ -297,7 +311,7 @@ sub prepend {
     if ( $entry->prepend($text) && $todo->save ) {
         return printf "%02d: %s\n", $line, $entry->text;
     }
-    die "Unable to append\n";
+    die "Unable to prepend\n";
 }
 
 sub pri     { return &unsupported }
@@ -389,7 +403,7 @@ sub read_config {
     my ($file) = @_;
 
     my %config;
-    open my $fh, '< ', $file or die "Unable to open [$file]: $!";
+    open my $fh, '<', $file or die "Unable to open [$file] : $!";
 LINE: while (<$fh>) {
         s/\r?\n$//xms;
         s/\s*\#.*$//xms;
