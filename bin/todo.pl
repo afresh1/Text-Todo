@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $RedRiver: todo.pl,v 1.9 2010/01/11 00:17:38 andrew Exp $
+# $RedRiver: todo.pl,v 1.12 2010/01/11 01:41:21 andrew Exp $
 ########################################################################
 # todo.pl *** a perl version of todo.sh. Uses Text::Todo.
 #
@@ -475,3 +475,121 @@ LINE: while (<$fh>) {
 
     return \%lc_config;
 }
+
+__END__
+
+=head1 NAME
+
+todo.pl - a perl replacement for todo.sh
+
+
+=head1 VERSION
+
+Since the $VERSION can't be automatically included, 
+here is the RCS Id instead, you'll have to look up $VERSION.
+
+    $Id: todo.pl,v 1.13 2010/01/11 02:35:39 andrew Exp $
+
+
+=head1 SYNOPSIS
+
+    todo.pl list
+
+    todo.pl -h
+
+=head1 DESCRIPTION
+
+Mostly compatible with todo.sh but not completely.
+Any differences are either noted under limitations is a bug.
+
+This is a proof of concept to get the Text::Todo modules used. 
+
+The modules are there to give more access to my todo.txt file from more
+places.  My goal is a web API for a web interface and then a WebOS version for
+my Palm Pre.
+
+For more information see L<http://todotxt.com>
+
+
+=head1 CONFIGURATION AND ENVIRONMENT
+
+todo.pl should read the todo.cfg file that todo.sh uses.  It is a very
+simplistic reader and would probably be easy to break.
+
+It only uses TODO_DIR, TODO_FILE and DONE_DIR
+
+It does not currently support any of the environment variables that todo.sh
+uses.
+
+
+=head1 DEPENDENCIES 
+
+Perl Modules:
+
+=over
+
+=item Text::Todo
+
+=item version
+
+=back
+
+
+=head1 INCOMPATIBILITIES
+
+Text::Todo::Entry actually checks if the entry is done before marking it
+complete again.
+
+Text::Todo::Entry will keep the completed marker and then the priority at the
+beginning of the line in that order.
+
+
+=head1 BUGS AND LIMITATIONS
+
+No bugs have been reported.
+
+Known limitations:
+
+Does not support some command line arguments. 
+    @, +, f, h, p, P, t, v or V.
+
+Does not yet support some actions.  Specifically, command, help and report. 
+
+Does not colorize output.
+
+
+=head1 AUTHOR
+
+Andrew Fresh  C<< <andrew@cpan.org> >>
+
+
+=head1 LICENSE AND COPYRIGHT
+
+Copyright (c) 2009, Andrew Fresh C<< <andrew@cpan.org> >>. All rights reserved.
+
+This module is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself. See L<perlartistic>.
+
+
+=head1 DISCLAIMER OF WARRANTY
+
+BECAUSE THIS SOFTWARE IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
+FOR THE SOFTWARE, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN
+OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES
+PROVIDE THE SOFTWARE "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER
+EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE
+ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE SOFTWARE IS WITH
+YOU. SHOULD THE SOFTWARE PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL
+NECESSARY SERVICING, REPAIR, OR CORRECTION.
+
+IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING
+WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MAY MODIFY AND/OR
+REDISTRIBUTE THE SOFTWARE AS PERMITTED BY THE ABOVE LICENCE, BE
+LIABLE TO YOU FOR DAMAGES, INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL,
+OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR INABILITY TO USE
+THE SOFTWARE (INCLUDING BUT NOT LIMITED TO LOSS OF DATA OR DATA BEING
+RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD PARTIES OR A
+FAILURE OF THE SOFTWARE TO OPERATE WITH ANY OTHER SOFTWARE), EVEN IF
+SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF
+SUCH DAMAGES.
