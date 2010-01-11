@@ -205,7 +205,7 @@ sub del {
 sub depri {
     my ( $config, $line ) = @_;
     if ( !( $line && $line =~ /^\d+$/xms ) ) {
-        die 'usage: todo.pl del ITEM#' . "\n";
+        die 'usage: todo.pl depri ITEM#' . "\n";
     }
     my $todo = Text::Todo->new($config);
 
@@ -314,7 +314,27 @@ sub prepend {
     die "Unable to prepend\n";
 }
 
-sub pri     { return &unsupported }
+sub pri {
+    my ( $config, $line, $priority ) = @_;
+    my $error = 'usage: todo.pl pri ITEM# PRIORITY';
+    if ( !( $line && $line =~ /^\d+$/xms && $priority ) ) {
+        die $error;
+    }
+    if ( $priority !~ /^[A-Z]$/xms ) {
+        die $error . "\n"
+            . "note: PRIORITY must a single letter from A to Z.\n";
+    }
+
+    my $todo = Text::Todo->new($config);
+
+    my $entry = $todo->list->[ $line - 1 ];
+    if ( $entry->pri($priority) && $todo->save ) {
+        return print $line, ': ', $entry->text, "\n",
+            'TODO: ', $line, ' prioritized (', $entry->priority, ").\n";
+    }
+    die "Unable to prioritize entry\n";
+}
+
 sub replace { return &unsupported }
 sub report  { return &unsupported }
 
