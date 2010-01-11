@@ -1,6 +1,6 @@
 package Text::Todo::Entry;
 
-# $RedRiver: Entry.pm,v 1.15 2010/01/10 01:45:52 andrew Exp $
+# $RedRiver: Entry.pm,v 1.16 2010/01/10 22:49:53 andrew Exp $
 
 use warnings;
 use strict;
@@ -22,8 +22,8 @@ use version; our $VERSION = qv('0.0.1');
     # XXX Should the completion (x) be case sensitive?
     my $priority_completion_regex = qr{
         ^ \s*
-        (?i:   (x)        \s*)?
-        (?i:\( ([A-Z]) \) \s*)?
+        (?i:(x \s* [\d-]* ) \s*)?
+        (?i:\( ([A-Z]) \)   \s*)?
     }xms;
 
     sub new {
@@ -89,10 +89,36 @@ use version; our $VERSION = qv('0.0.1');
             $tags_of{$ident}{$tag} = { map { $_ => q{} }
                     $text =~ / (?:^|\s) $symbol  (\S*)/gxms };
         }
-        ( $completion_status_of{$ident}, $priority_of{$ident} )
+        my ( $completed, $priority )
             = $text =~ / $priority_completion_regex /xms;
 
+        $completion_status_of{$ident} = _clean_completed($completed);
+        $priority_of{$ident} = $priority; 
+
         return 1;
+    }
+
+    sub _clean_completed {
+        my ($completed) = @_;
+
+        $completed ||= q{};
+        $completed =~ s/^\s+|\s+$//gxms;
+
+        if (!$completed) {
+            return;
+        }
+
+        if ($completed =~ s/(x)\s*//ixms) {
+            my $status = $1;
+            if ($completed) {
+                return $completed;
+            }
+            else {
+                return $status;
+            }
+        }
+
+        return;
     }
 
     sub _tags {
@@ -201,7 +227,7 @@ Text::Todo::Entry - An object for manipulating an entry on a Text::Todo list
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: Entry.pm,v 1.16 2010/01/10 22:49:53 andrew Exp $
+    $Id: Entry.pm,v 1.17 2010/01/11 01:08:35 andrew Exp $
 
 
 =head1 SYNOPSIS

@@ -8,7 +8,7 @@
 #       AUTHOR:  Andrew Fresh (AAF), andrew@cpan.org
 #      COMPANY:  Red River Communications
 #      CREATED:  07/09/09 11:45:52
-#     REVISION:  $RedRiver: read_todo.t,v 1.4 2010/01/08 23:06:09 andrew Exp $
+#     REVISION:  $RedRiver: read_todo.t,v 1.5 2010/01/10 04:08:59 andrew Exp $
 #===============================================================================
 
 use strict;
@@ -66,6 +66,12 @@ my @todos = (
         contexts => ['wherever'],
         projects => ['report_bug'],
         done     => undef,
+    },
+    {   text     => 'x 2009-01-01 completed with a date',
+        priority => undef,
+        contexts => [],
+        projects => [],
+        done     => '2009-01-01',
     },
 );
 
