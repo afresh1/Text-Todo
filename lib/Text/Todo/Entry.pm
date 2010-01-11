@@ -93,7 +93,7 @@ use version; our $VERSION = qv('0.0.1');
             = $text =~ / $priority_completion_regex /xms;
 
         $completion_status_of{$ident} = _clean_completed($completed);
-        $priority_of{$ident} = $priority; 
+        $priority_of{$ident}          = $priority;
 
         return 1;
     }
@@ -104,11 +104,11 @@ use version; our $VERSION = qv('0.0.1');
         $completed ||= q{};
         $completed =~ s/^\s+|\s+$//gxms;
 
-        if (!$completed) {
+        if ( !$completed ) {
             return;
         }
 
-        if ($completed =~ s/(x)\s*//ixms) {
+        if ( $completed =~ s/(x)\s*//ixms ) {
             my $status = $1;
             if ($completed) {
                 return $completed;
@@ -172,6 +172,9 @@ use version; our $VERSION = qv('0.0.1');
         $new =~ s/$priority_completion_regex//xms;
 
         if ( $self->done ) {
+            if ($self->done !~ /^x/ixms) {
+                push @new, 'x';
+            }
             push @new, $self->done;
         }
 
@@ -201,7 +204,10 @@ use version; our $VERSION = qv('0.0.1');
             return 1;
         }
 
-        $completion_status_of{$ident} = 'x';
+        $completion_status_of{$ident} = sprintf "%04d-%02d-%02d",
+            ( (localtime)[5] + 1900 ),
+            ( (localtime)[4] + 1 ),
+            ( (localtime)[3] );
 
         return $self->prepend();
     }
@@ -227,7 +233,7 @@ Text::Todo::Entry - An object for manipulating an entry on a Text::Todo list
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: Entry.pm,v 1.17 2010/01/11 01:08:35 andrew Exp $
+    $Id: Entry.pm,v 1.18 2010/01/11 01:30:24 andrew Exp $
 
 
 =head1 SYNOPSIS
@@ -386,16 +392,19 @@ Marks an entry as completed.
 
     $entry->do;
 
-Does this by prepending an 'x' to the beginning of the entry.
+Does this by prepending "x `date '%Y-%m-%d'`" to the beginning of the entry.
 
 =head2 done
 
 Returns true if an entry is marked complete and false if not.
-
-    if (!$entry->done) {
+    
+    if (!my $status = $entry->done) {
         # remind me to do it
     }
 
+If the entry starts as 'x date', for example 'x 2010-01-01', $status is now
+'2010-01-01'.  
+If the entry just starts with 'x', then $status will be 'x'.
 
 =head1 DIAGNOSTICS
 

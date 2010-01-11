@@ -7,7 +7,7 @@
 #       AUTHOR:  Andrew Fresh (AAF), andrew@cpan.org
 #      COMPANY:  Red River Communications
 #      CREATED:  07/10/09 11:32:39
-#     REVISION:  $RedRiver: entry.t,v 1.8 2010/01/09 07:07:31 andrew Exp $
+#     REVISION:  $RedRiver: entry.t,v 1.9 2010/01/10 22:52:32 andrew Exp $
 #===============================================================================
 
 use strict;
@@ -80,10 +80,16 @@ ok( $e->depri(), 'Deprioritize' );
 is( $e->text,     $sample{text}, 'Make sure entry matches' );
 is( $e->priority, undef,         'New priority is set' );
 
+my $done_date = sprintf "%04d-%02d-%02d",
+    ( (localtime)[5] + 1900 ),
+    ( (localtime)[4] + 1 ),
+    ( (localtime)[3] );
+my $done_marker = "x $done_date ";
+
 ok( !$e->done, 'not done' );
 ok( $e->do,    'mark as done' );
-ok( $e->done,  'now done' );
-is( $e->text, 'x ' . $sample{text}, 'Make sure entry matches' );
+is( $e->done, $done_date, 'now done' );
+is( $e->text, $done_marker . $sample{text}, 'Make sure entry matches' );
 
 ok( $e->replace(''), 'Blank entry' );
 is( $e->text,     '',    'Make sure entry is blank' );
