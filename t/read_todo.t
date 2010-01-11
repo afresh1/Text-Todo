@@ -8,14 +8,14 @@
 #       AUTHOR:  Andrew Fresh (AAF), andrew@cpan.org
 #      COMPANY:  Red River Communications
 #      CREATED:  07/09/09 11:45:52
-#     REVISION:  $RedRiver: read_todo.t,v 1.5 2010/01/10 04:08:59 andrew Exp $
+#     REVISION:  $RedRiver: read_todo.t,v 1.6 2010/01/11 01:08:35 andrew Exp $
 #===============================================================================
 
 use strict;
 use warnings;
 use File::Spec;
 use File::Temp qw/ tempdir /;
-use Test::More tests => 122;
+use Test::More tests => 138;
 
 my $todo_file = File::Spec->catfile( 't', 'todo1.txt' );
 my $tempdir = tempdir( 'todotxt-XXXXXXX', CLEANUP => 1 );
