@@ -7,7 +7,7 @@
 #       AUTHOR:  Andrew Fresh (AAF), andrew@cpan.org
 #      COMPANY:  Red River Communications
 #      CREATED:  07/10/09 11:32:39
-#     REVISION:  $RedRiver: entry.t,v 1.9 2010/01/10 22:52:32 andrew Exp $
+#     REVISION:  $AFresh1: entry.t,v 1.10 2010/01/11 01:30:24 andrew Exp $
 #===============================================================================
 
 use strict;

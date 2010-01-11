@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $RedRiver: todo.pl,v 1.12 2010/01/11 01:41:21 andrew Exp $
+# $AFresh1: todo.pl,v 1.13 2010/01/11 02:35:39 andrew Exp $
 ########################################################################
 # todo.pl *** a perl version of todo.sh. Uses Text::Todo.
 #
@@ -488,7 +488,7 @@ todo.pl - a perl replacement for todo.sh
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: todo.pl,v 1.13 2010/01/11 02:35:39 andrew Exp $
+    $Id: todo.pl,v 1.14 2010/01/11 19:52:06 andrew Exp $
 
 
 =head1 SYNOPSIS
@@ -501,6 +501,8 @@ here is the RCS Id instead, you'll have to look up $VERSION.
 
 Mostly compatible with todo.sh but not completely.
 Any differences are either noted under limitations is a bug.
+
+Ideally todo.pl should pass all the todo.sh tests.
 
 This is a proof of concept to get the Text::Todo modules used. 
 

@@ -1,6 +1,6 @@
 package Text::Todo::Entry;
 
-# $RedRiver: Entry.pm,v 1.16 2010/01/10 22:49:53 andrew Exp $
+# $AFresh1: Entry.pm,v 1.18 2010/01/11 01:30:24 andrew Exp $
 
 use warnings;
 use strict;
@@ -233,7 +233,7 @@ Text::Todo::Entry - An object for manipulating an entry on a Text::Todo list
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: Entry.pm,v 1.18 2010/01/11 01:30:24 andrew Exp $
+    $Id: Entry.pm,v 1.19 2010/01/11 19:52:06 andrew Exp $
 
 
 =head1 SYNOPSIS

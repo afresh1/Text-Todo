@@ -1,6 +1,6 @@
 package Text::Todo;
 
-# $RedRiver: Todo.pm,v 1.13 2010/01/10 07:07:46 andrew Exp $
+# $AFresh1: Todo.pm,v 1.14 2010/01/10 22:39:26 andrew Exp $
 
 use warnings;
 use strict;
@@ -397,7 +397,7 @@ Text::Todo - Perl interface to todo_txt files
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: Todo.pm,v 1.14 2010/01/10 22:39:26 andrew Exp $
+    $Id: Todo.pm,v 1.15 2010/01/11 19:52:06 andrew Exp $
 
 =head1 SYNOPSIS
 
