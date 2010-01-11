@@ -217,7 +217,27 @@ sub depri {
     die "Unable to deprioritize entry\n";
 }
 
-sub mark_done { return &unsupported }
+# since "do" is reserved
+sub mark_done { 
+    my ( $config, $line ) = @_;
+    if ( !( $line && $line =~ /^\d+$/xms ) ) {
+        die 'usage: todo.pl del ITEM#' . "\n";
+    }
+    my $todo = Text::Todo->new($config);
+
+    my $entry = $todo->list->[ $line - 1 ];
+
+    if ( $entry->do && $todo->save ) {
+        my $status = print $line, ': ', $entry->text, "\n",
+            'TODO: ', $line, " marked as done.\n";
+        if (!$opts{a}) {
+            return archive($config);
+        }
+        return $status;
+    }
+    die "Unable to mark as done\n";
+}
+
 sub help      { return &unsupported }
 
 sub list {
