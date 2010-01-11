@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $RedRiver: todo.pl,v 1.5 2010/01/10 23:37:12 andrew Exp $
+# $RedRiver: todo.pl,v 1.7 2010/01/10 23:58:11 andrew Exp $
 ########################################################################
 # todo.pl *** a perl version of todo.sh. Uses Text::Todo.
 #
@@ -282,7 +282,24 @@ sub listproj {
 }
 
 sub move    { return &unsupported }
-sub prepend { return &unsupported }
+
+sub prepend {
+    my ( $config, $line, @text) = @_;
+    if ( !( $line && @text && $line =~ /^\d+$/xms ) ) {
+        die 'usage: todo.pl prepend ITEM# "TEXT TO APPEND"' . "\n";
+    }
+
+    my $text = join q{ }, @text;
+
+    my $todo  = Text::Todo->new($config);
+    my $entry = $todo->list->[ $line - 1 ];
+
+    if ( $entry->prepend($text) && $todo->save ) {
+        return printf "%02d: %s\n", $line, $entry->text;
+    }
+    die "Unable to append\n";
+}
+
 sub pri     { return &unsupported }
 sub replace { return &unsupported }
 sub report  { return &unsupported }
