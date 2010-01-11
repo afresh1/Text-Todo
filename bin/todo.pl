@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $RedRiver: todo.pl,v 1.7 2010/01/10 23:58:11 andrew Exp $
+# $RedRiver: todo.pl,v 1.9 2010/01/11 00:17:38 andrew Exp $
 ########################################################################
 # todo.pl *** a perl version of todo.sh. Uses Text::Todo.
 #
@@ -183,7 +183,7 @@ sub del {
     }
     my $todo = Text::Todo->new($config);
 
-    my $entry = $todo->list->[$line - 1];
+    my $entry = $todo->list->[ $line - 1 ];
     print "Delete '" . $entry->text . "'?  (y/n)\n";
     warn "XXX No delete confirmation currently!\n";
 
@@ -295,10 +295,10 @@ sub listproj {
     return print map {"\+$_\n"} $todo->listproj;
 }
 
-sub move    { return &unsupported }
+sub move { return &unsupported }
 
 sub prepend {
-    my ( $config, $line, @text) = @_;
+    my ( $config, $line, @text ) = @_;
     if ( !( $line && @text && $line =~ /^\d+$/xms ) ) {
         die 'usage: todo.pl prepend ITEM# "TEXT TO PREPEND"' . "\n";
     }
@@ -330,8 +330,7 @@ sub _show_sorted_list {
     $term = defined $term ? quotemeta($term) : '';
 
     my $shown = 0;
-    my @sorted
-        = map { sprintf "%02d %s", $_->{line}, $_->{entry}->text }
+    my @sorted = map { sprintf "%02d %s", $_->{line}, $_->{entry}->text }
         sort { lc $a->{entry}->text cmp lc $b->{entry}->text } @list;
 
     foreach my $line ( grep {/$term/xms} @sorted ) {
