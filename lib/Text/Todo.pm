@@ -1,6 +1,6 @@
 package Text::Todo;
 
-# $AFresh1: Todo.pm,v 1.14 2010/01/10 22:39:26 andrew Exp $
+# $AFresh1: Todo.pm,v 1.15 2010/01/11 19:52:06 andrew Exp $
 
 use warnings;
 use strict;
@@ -397,7 +397,7 @@ Text::Todo - Perl interface to todo_txt files
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: Todo.pm,v 1.15 2010/01/11 19:52:06 andrew Exp $
+    $Id: Todo.pm,v 1.16 2010/01/12 19:40:52 andrew Exp $
 
 =head1 SYNOPSIS
 
@@ -470,6 +470,7 @@ If as in the SYNOPSIS above you used $todo = new('todo/todo.txt').
 then, $todo_file eq 'todo/todo.txt'
 
 =head2 load
+- Reads a list from a file into the current object.
 
 Allows you to load a different file into the object.
 
@@ -478,35 +479,53 @@ Allows you to load a different file into the object.
 This effects the other functions that act on the list.
 
 =head2 save
+- Writes the list to disk.
 
     $todo->save(['new/path/to/todo']);
 
-Writes the list to the file. Either the current working file or something
+Either writes the current working file or the passed in argument
 that can be recognized by file(). 
 
 If you specify a filename it will save to that file and update the paths.  
 Additional changes to the object work on that file.
 
 =head2 list
+- get the curently loaded list
 
     my @todo_list = $todo->list;
 
+In list context returns a list, it scalar context returns an array reference to the list.
+
 =head2 listpri
+- get the list items that are marked priority
 
 Like list, but only returns entries that have priority set.
 
     my @priority_list = $todo->listpri;
 
-=head2 listproj
+Since this is so easy to write as:
 
-Returns projects in the list sorted by name.  
-If there were projects +GarageSale and +Shopping
+    my @priority_list = grep { $_->priority } $todo->list;
 
-    my @projects = $todo->listproj;
+I think it may become depreciated unless there is demand.
+
+=head2 listtag
+
+Returns tags found in the list sorted by name.  
+
+If there were projects +GarageSale and +Shopping then
+
+    my @projects = $todo->listtag('project');
 
 is the same as
 
     @projects = ( 'GarageSale', 'Shopping' );
+
+=head2 listcon
+- Shortcut to listtag('context')
+
+=head2 listproj
+- Shortcut to listtag('project')
 
 =head2 add
 
