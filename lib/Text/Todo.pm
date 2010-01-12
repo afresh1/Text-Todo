@@ -1,6 +1,6 @@
 package Text::Todo;
 
-# $AFresh1: Todo.pm,v 1.15 2010/01/11 19:52:06 andrew Exp $
+# $AFresh1: Todo.pm,v 1.16 2010/01/12 19:40:52 andrew Exp $
 
 use warnings;
 use strict;
@@ -203,7 +203,7 @@ use version; our $VERSION = qv('0.0.1');
         if ($pri) {
             $pri = uc $pri;
             if ( $pri !~ /^[A-Z]$/xms ) {
-                croak "PRIORITY must a single letter from A to Z.";
+                croak 'PRIORITY must a single letter from A to Z.';
             }
             @list = grep { defined $_->priority && $_->priority eq $pri }
                 $self->list;
@@ -260,19 +260,19 @@ use version; our $VERSION = qv('0.0.1');
     }
 
     sub listproj {
-        my ( $self ) = @_;
+        my ($self) = @_;
         return $self->listtag('project');
     }
 
     sub listcon {
-        my ( $self ) = @_;
+        my ($self) = @_;
         return $self->listtag('context');
     }
 
     sub listtag {
         my ( $self, $tag ) = @_;
         my $ident = ident($self);
-        
+
         my $accessor = $tag . 's';
 
         my %available;
@@ -284,7 +284,7 @@ use version; our $VERSION = qv('0.0.1');
 
         my @tags = sort keys %available;
 
-        return wantarray ? @tags: \@tags;
+        return wantarray ? @tags : \@tags;
     }
 
     sub archive {
@@ -397,7 +397,7 @@ Text::Todo - Perl interface to todo_txt files
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: Todo.pm,v 1.16 2010/01/12 19:40:52 andrew Exp $
+    $Id: Todo.pm,v 1.17 2010/01/12 20:09:02 andrew Exp $
 
 =head1 SYNOPSIS
 

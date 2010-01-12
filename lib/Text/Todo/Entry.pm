@@ -1,6 +1,6 @@
 package Text::Todo::Entry;
 
-# $AFresh1: Entry.pm,v 1.18 2010/01/11 01:30:24 andrew Exp $
+# $AFresh1: Entry.pm,v 1.19 2010/01/11 19:52:06 andrew Exp $
 
 use warnings;
 use strict;
@@ -172,7 +172,7 @@ use version; our $VERSION = qv('0.0.1');
         $new =~ s/$priority_completion_regex//xms;
 
         if ( $self->done ) {
-            if ($self->done !~ /^x/ixms) {
+            if ( $self->done !~ /^x/ixms ) {
                 push @new, 'x';
             }
             push @new, $self->done;
@@ -233,7 +233,7 @@ Text::Todo::Entry - An object for manipulating an entry on a Text::Todo list
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: Entry.pm,v 1.19 2010/01/11 19:52:06 andrew Exp $
+    $Id: Entry.pm,v 1.20 2010/01/12 20:09:02 andrew Exp $
 
 
 =head1 SYNOPSIS
