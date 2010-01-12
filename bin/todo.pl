@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $AFresh1: todo.pl,v 1.14 2010/01/11 19:52:06 andrew Exp $
+# $AFresh1: todo.pl,v 1.15 2010/01/12 20:30:55 andrew Exp $
 ########################################################################
 # todo.pl *** a perl version of todo.sh. Uses Text::Todo.
 #
@@ -96,7 +96,7 @@ if ( $opts{d} ) {
 
 if ( exists $actions{$action} ) {
     my $config = read_config($config_file);
-    my $action = $actions{$action}->( $config, @ARGV );
+    my $result = $actions{$action}->( $config, @ARGV );
 }
 else {
     usage();
@@ -295,7 +295,7 @@ sub listpri {
     my @pri_list;
     if ($pri) {
         $pri = uc $pri;
-        if ( $pri !~ /^[A-Z]$/xms ) {
+        if ( $pri !~ /^[[:upper:]]$/xms ) {
             die "usage: todo.pl listpri PRIORITY\n",
                 "note: PRIORITY must a single letter from A to Z.\n";
         }
@@ -346,7 +346,7 @@ sub pri {
     if ( !( $line && $line =~ /^\d+$/xms && $priority ) ) {
         die "$error\n";
     }
-    elsif ( $priority !~ /^[A-Z]$/xms ) {
+    elsif ( $priority !~ /^[[:upper:]]$/xms ) {
         $error .= "\n" . 'note: PRIORITY must a single letter from A to Z.';
         die "$error\n";
     }
@@ -504,7 +504,7 @@ todo.pl - a perl replacement for todo.sh
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: todo.pl,v 1.15 2010/01/12 20:30:55 andrew Exp $
+    $Id: todo.pl,v 1.16 2010/01/12 23:46:40 andrew Exp $
 
 
 =head1 SYNOPSIS
