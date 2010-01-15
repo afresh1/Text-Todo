@@ -8,7 +8,7 @@
 #       AUTHOR:  Andrew Fresh (AAF), andrew@cpan.org
 #      COMPANY:  Red River Communications
 #      CREATED:  01/07/10 19:11
-#     REVISION:  $AFresh1: list.t,v 1.8 2010/01/10 22:39:26 andrew Exp $
+#     REVISION:  $AFresh1: list.t,v 1.9 2010/01/11 19:52:06 andrew Exp $
 #===============================================================================
 
 use strict;
@@ -21,7 +21,7 @@ use Data::Dumper;
 
 my $class = 'Text::Todo';
 
-BEGIN: { use_ok( $class, "use $class" ) }
+BEGIN { use_ok( $class, "use $class" ) }
 
 diag("Testing entry $class $Text::Todo::VERSION");
 

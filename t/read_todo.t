@@ -8,7 +8,7 @@
 #       AUTHOR:  Andrew Fresh (AAF), andrew@cpan.org
 #      COMPANY:  Red River Communications
 #      CREATED:  07/09/09 11:45:52
-#     REVISION:  $AFresh1: read_todo.t,v 1.7 2010/01/11 01:20:09 andrew Exp $
+#     REVISION:  $AFresh1: read_todo.t,v 1.8 2010/01/11 19:52:06 andrew Exp $
 #===============================================================================
 
 use strict;
@@ -83,7 +83,7 @@ my %extra_todo = (
     done     => undef,
 );
 
-BEGIN: { use_ok( 'Text::Todo', 'use Text::Todo' ) }
+BEGIN { use_ok( 'Text::Todo', 'use Text::Todo' ) }
 
 diag("Testing read Text::Todo $Text::Todo::VERSION");
 
