@@ -1,6 +1,6 @@
 package Text::Todo::Entry;
 
-# $AFresh1: Entry.pm,v 1.20 2010/01/12 20:09:02 andrew Exp $
+# $AFresh1: Entry.pm,v 1.22 2010/01/18 02:46:48 andrew Exp $
 
 use warnings;
 use strict;
@@ -12,12 +12,15 @@ use List::Util qw/ first /;
 use version; our $VERSION = qv('0.0.1');
 
 {
-    my %text_of;
 
-    my %tags_of;
-    my %priority_of;
-    my %completion_status_of;
-    my %known_tags_of;
+    my @attr_refs = \(
+        my %text_of,
+
+        my %tags_of,
+        my %priority_of,
+        my %completion_status_of,
+        my %known_tags_of,
+    );
 
     # XXX Should the completion (x) be case sensitive?
     my $priority_completion_regex = qr{
@@ -219,6 +222,13 @@ use version; our $VERSION = qv('0.0.1');
         return $completion_status_of{$ident};
     }
 
+    sub DESTROY {
+        my ($self) = @_;
+        my $ident = ident $self;
+        foreach my $attr_ref (@attr_refs) {
+            delete $attr_ref->{$ident};
+        }
+    }
 }
 1;    # Magic true value required at end of module
 __END__
@@ -233,7 +243,7 @@ Text::Todo::Entry - An object for manipulating an entry on a Text::Todo list
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: Entry.pm,v 1.22 2010/01/18 02:46:48 andrew Exp $
+    $Id: Entry.pm,v 1.23 2010/01/18 03:04:48 andrew Exp $
 
 
 =head1 SYNOPSIS

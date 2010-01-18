@@ -1,6 +1,6 @@
 package Text::Todo;
 
-# $AFresh1: Todo.pm,v 1.17 2010/01/12 20:09:02 andrew Exp $
+# $AFresh1: Todo.pm,v 1.19 2010/01/18 02:46:48 andrew Exp $
 
 use warnings;
 use strict;
@@ -14,9 +14,12 @@ use version; our $VERSION = qv('0.0.1');
 
 {
 
-    my %path_of;
-    my %list_of;
-    my %loaded_of;
+    my @attr_refs = \(
+        my %path_of,
+
+        my %list_of,
+        my %loaded_of,
+    );
 
     sub new {
         my ( $class, $options ) = @_;
@@ -382,6 +385,14 @@ use version; our $VERSION = qv('0.0.1');
 
         croak "Invalid entry [$entry]!";
     }
+
+    sub DESTROY {
+        my ($self) = @_;
+        my $ident = ident $self;
+        foreach my $attr_ref (@attr_refs) {
+            delete $attr_ref->{$ident};
+        }
+    }
 }
 
 1;    # Magic true value required at end of module
@@ -397,7 +408,7 @@ Text::Todo - Perl interface to todo_txt files
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: Todo.pm,v 1.19 2010/01/18 02:46:48 andrew Exp $
+    $Id: Todo.pm,v 1.20 2010/01/18 03:04:48 andrew Exp $
 
 =head1 SYNOPSIS
 
