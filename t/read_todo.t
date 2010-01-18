@@ -97,7 +97,7 @@ ok( $todo->load($todo_file), "Load file [$todo_file]" );
 
 ok( $todo->save($dup_todo_file), "Save to tempfile" );
 
-my $dup_todo = new_ok( 'Text::Todo' => [{ todo_file => $dup_todo_file }], 'New todo' );
+my $dup_todo = new_ok( 'Text::Todo' => [$dup_todo_file], 'New todo' );
 
 ok( $todo->load($todo_file), "Load file [$todo_file]" );
 

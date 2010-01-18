@@ -6,17 +6,23 @@ use warnings;
 use strict;
 use Carp;
 
-use Class::Std;
+use Class::Std::Utils;
 use Text::Todo::Entry;
 use File::Spec;
 
 use version; our $VERSION = qv('0.0.1');
 
 {
-    my ( %path_of, %list_of, %loaded_of, ) : ATTR;
 
-    sub BUILD {
-        my ( $self, $ident, $options ) = @_;
+    my %path_of;
+    my %list_of;
+    my %loaded_of;
+
+    sub new {
+        my ( $class, $options ) = @_;
+
+        my $self = bless anon_scalar(), $class;
+        my $ident = ident($self);
 
         $path_of{$ident} = {
             todo_dir  => undef,
@@ -154,7 +160,7 @@ use version; our $VERSION = qv('0.0.1');
         open my $fh, '<', $file or croak "Couldn't open [$file]: $!";
         while (<$fh>) {
             s/\r?\n$//xms;
-            push @list, Text::Todo::Entry->new({ text => $_ });
+            push @list, Text::Todo::Entry->new($_);
         }
         close $fh or croak "Couldn't close [$file]: $!";
 
@@ -214,7 +220,7 @@ use version; our $VERSION = qv('0.0.1');
         my $ident = ident($self);
 
         if ( !ref $entry ) {
-            $entry = Text::Todo::Entry->new({ text => $entry });
+            $entry = Text::Todo::Entry->new($entry);
         }
         elsif ( ref $entry ne 'Text::Todo::Entry' ) {
             croak(
@@ -391,7 +397,7 @@ Text::Todo - Perl interface to todo_txt files
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: Todo.pm,v 1.18 2010/01/18 00:19:55 andrew Exp $
+    $Id: Todo.pm,v 1.19 2010/01/18 02:46:48 andrew Exp $
 
 =head1 SYNOPSIS
 
@@ -422,7 +428,7 @@ It should be extensible, but and hopefully will be before a 1.0 release.
 
 =head1 INTERFACE 
 
-=head2 BUILD
+=head2 new
 
     new({ 
         [ todo_dir    => 'directory', ]
@@ -433,9 +439,14 @@ It should be extensible, but and hopefully will be before a 1.0 release.
 
 Allows you to set each item individually.  todo_file defaults to todo.txt.
 
-    new({ todo_file => 'path/to/todo.txt');
+    new('path/to/todo.txt');
 
 Automatically sets todo_dir to 'path/to', todo_file to 'todo.txt' 
+
+    new('path/to')
+
+If you pass an existing directory to new, it will set todo_dir. 
+
 
 If you what you set matches (.*)todo(.*).txt it will automatically set 
 done_file to $1done$2.txt
@@ -592,7 +603,7 @@ possibly be better done in a client that would use this module.
 
 =head1 DEPENDENCIES
 
-Class::Std
+Class::Std::Utils
 File::Spec
 version
 

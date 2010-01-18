@@ -6,14 +6,18 @@ use warnings;
 use strict;
 use Carp;
 
-use Class::Std;
+use Class::Std::Utils;
 use List::Util qw/ first /;
 
 use version; our $VERSION = qv('0.0.1');
 
 {
-    my ( %text_of, %tags_of, %priority_of, %completion_status_of,
-        %known_tags_of, ) : ATTR;
+    my %text_of;
+
+    my %tags_of;
+    my %priority_of;
+    my %completion_status_of;
+    my %known_tags_of;
 
     # XXX Should the completion (x) be case sensitive?
     my $priority_completion_regex = qr{
@@ -22,8 +26,11 @@ use version; our $VERSION = qv('0.0.1');
         (?i:\( ([A-Z]) \)   \s*)?
     }xms;
 
-    sub BUILD {
-        my ( $self, $ident, $options ) = @_;
+    sub new {
+        my ( $class, $options ) = @_;
+
+        my $self = bless anon_scalar(), $class;
+        my $ident = ident($self);
 
         if ( !ref $options ) {
             $options = { text => $options };
@@ -226,7 +233,7 @@ Text::Todo::Entry - An object for manipulating an entry on a Text::Todo list
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: Entry.pm,v 1.21 2010/01/18 00:19:55 andrew Exp $
+    $Id: Entry.pm,v 1.22 2010/01/18 02:46:48 andrew Exp $
 
 
 =head1 SYNOPSIS
@@ -252,7 +259,7 @@ For more information see L<http://todotxt.com>
 
 =head1 INTERFACE 
 
-=head2 BUILD
+=head2 new
 
 Creates an entry that can be manipulated.
 

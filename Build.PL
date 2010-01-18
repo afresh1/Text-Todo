@@ -1,23 +1,22 @@
 use strict;
 use warnings;
 use Module::Build;
-
 # $AFresh1: Build.PL,v 1.3 2010/01/11 19:52:06 andrew Exp $
 
 my $builder = Module::Build->new(
-    module_name       => 'Text::Todo',
-    license           => 'perl',
-    dist_author       => 'Andrew Fresh <andrew@cpan.org>',
-    dist_version_from => 'lib/Text/Todo.pm',
-    requires          => {
+    module_name         => 'Text::Todo',
+    license             => 'perl',
+    dist_author         => 'Andrew Fresh <andrew@cpan.org>',
+    dist_version_from   => 'lib/Text/Todo.pm',
+    requires => {
         'Test::More' => 0,
-        'Carp'       => 0,
-        'Class::Std' => 0,
+        'Carp' => 0,
+        'Class::Std::Utils' => 0,
         'File::Spec' => 0,
         'List::Util' => 0,
         'version'    => 0,
     },
-    add_to_cleanup => ['Text-Todo-*'],
+    add_to_cleanup      => [ 'Text-Todo-*' ],
 );
 
 $builder->create_build_script();
