@@ -8,7 +8,7 @@
 #       AUTHOR:  Andrew Fresh (AAF), andrew@cpan.org
 #      COMPANY:  Red River Communications
 #      CREATED:  07/09/09 11:45:52
-#     REVISION:  $AFresh1: read_todo.t,v 1.8 2010/01/11 19:52:06 andrew Exp $
+#     REVISION:  $AFresh1: read_todo.t,v 1.9 2010/01/15 19:44:32 andrew Exp $
 #===============================================================================
 
 use strict;
@@ -97,7 +97,7 @@ ok( $todo->load($todo_file), "Load file [$todo_file]" );
 
 ok( $todo->save($dup_todo_file), "Save to tempfile" );
 
-my $dup_todo = new_ok( 'Text::Todo' => [$dup_todo_file], 'New todo' );
+my $dup_todo = new_ok( 'Text::Todo' => [{ todo_file => $dup_todo_file }], 'New todo' );
 
 ok( $todo->load($todo_file), "Load file [$todo_file]" );
 

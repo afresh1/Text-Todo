@@ -8,7 +8,7 @@
 #       AUTHOR:  Andrew Fresh (AAF), andrew@cpan.org
 #      COMPANY:  Red River Communications
 #      CREATED:  01/07/10 19:11
-#     REVISION:  $AFresh1: list.t,v 1.10 2010/01/15 19:44:32 andrew Exp $
+#     REVISION:  $AFresh1: list.t,v 1.11 2010/01/15 19:50:15 andrew Exp $
 #===============================================================================
 
 use strict;
@@ -26,7 +26,7 @@ BEGIN {
 
 diag("Testing entry $class $Text::Todo::VERSION");
 
-my $orig = new_ok( $class, ['t/todo.list.txt'] );
+my $orig = new_ok( $class => [{ todo_file => 't/todo.list.txt' }] );
 my @orig_list;
 ok( @orig_list = $orig->list, 'get orig list' );
 
@@ -36,7 +36,7 @@ is( $orig->file('report_file'),
     't/report.list.txt', 'orig report_file matches' );
 
 my $todo_dir = tempdir( 'todo-XXXXXXXXX', CLEANUP => 1, TMPDIR => 1 );
-my $copy = new_ok($class);
+my $copy = new_ok($class => []);
 
 foreach my $e (@orig_list) {
     ok( $copy->add($e), 'add entry from orginal list' );
