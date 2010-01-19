@@ -1,6 +1,18 @@
 Revision history for Text-Todo
 
+0.1.0  Tue Jan 19 11:52:12 2010
+       Fix BEGIN blocks in tests, Bug #53713
+       Move to public CVS:
+         http://cvs.afresh1.com/cgi-bin/cvsweb/todotxt/
+       Fix the required modules list
+       make perlcritic happier with todo.pl
+       add more features to todo.pl
+       More work on the POD for everything
+       Cleanup object on destruction
+       Include a todo.cgi that will not be maintained, 
+         it was the start of Text::Todo::REST::API
+
 0.0.1  Sun Jan 10 19:57:01 2010
        Initial release.
 
-$AFresh1: Changes,v 1.2 2010/01/11 02:57:34 andrew Exp $
+$AFresh1: Changes,v 1.3 2010/01/11 19:52:06 andrew Exp $

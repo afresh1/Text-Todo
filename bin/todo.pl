@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $AFresh1: todo.pl,v 1.16 2010/01/12 23:46:40 andrew Exp $
+# $AFresh1: todo.pl,v 1.17 2010/01/16 06:07:13 andrew Exp $
 ########################################################################
 # todo.pl *** a perl version of todo.sh. Uses Text::Todo.
 #
@@ -16,7 +16,7 @@ use warnings;
 use Getopt::Std;
 use Text::Todo;
 
-use version; our $VERSION = qv('0.0.1');
+use version; our $VERSION = qv('0.1.0');
 
 # option defaults
 my $config_file = $ENV{HOME} . '/todo.cfg';
@@ -502,7 +502,7 @@ todo.pl - a perl replacement for todo.sh
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: todo.pl,v 1.17 2010/01/16 06:07:13 andrew Exp $
+    $Id: todo.pl,v 1.18 2010/01/19 18:53:36 andrew Exp $
 
 
 =head1 SYNOPSIS
