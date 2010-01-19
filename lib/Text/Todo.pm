@@ -1,6 +1,6 @@
 package Text::Todo;
 
-# $AFresh1: Todo.pm,v 1.19 2010/01/18 02:46:48 andrew Exp $
+# $AFresh1: Todo.pm,v 1.20 2010/01/18 03:04:48 andrew Exp $
 
 use warnings;
 use strict;
@@ -389,9 +389,12 @@ use version; our $VERSION = qv('0.0.1');
     sub DESTROY {
         my ($self) = @_;
         my $ident = ident $self;
+
         foreach my $attr_ref (@attr_refs) {
             delete $attr_ref->{$ident};
         }
+
+        return;
     }
 }
 
@@ -408,7 +411,7 @@ Text::Todo - Perl interface to todo_txt files
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: Todo.pm,v 1.20 2010/01/18 03:04:48 andrew Exp $
+    $Id: Todo.pm,v 1.21 2010/01/19 18:45:53 andrew Exp $
 
 =head1 SYNOPSIS
 
