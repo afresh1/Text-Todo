@@ -8,7 +8,7 @@
 #       AUTHOR:  Andrew Fresh (AAF), andrew@cpan.org
 #      COMPANY:  Red River Communications
 #      CREATED:  01/07/10 19:11
-#     REVISION:  $AFresh1: list.t,v 1.11 2010/01/15 19:50:15 andrew Exp $
+#     REVISION:  $AFresh1: list.t,v 1.13 2010/01/18 02:46:48 andrew Exp $
 #===============================================================================
 
 use strict;
@@ -17,11 +17,13 @@ use warnings;
 use Test::More tests => 53;
 
 use File::Temp qw/ tempdir /;
+use File::Spec;
 
 my $class;
-BEGIN { 
-	$class = 'Text::Todo';
-	use_ok( $class, "use $class" ) 
+
+BEGIN {
+    $class = 'Text::Todo';
+    use_ok( $class, "use $class" );
 }
 
 diag("Testing entry $class $Text::Todo::VERSION");
@@ -30,10 +32,18 @@ my $orig = new_ok( $class, ['t/todo.list.txt'] );
 my @orig_list;
 ok( @orig_list = $orig->list, 'get orig list' );
 
-is( $orig->file('todo_file'), 't/todo.list.txt', 'orig todo_file matches' );
-is( $orig->file('done_file'), 't/done.list.txt', 'orig done_file matches' );
+is( $orig->file('todo_file'),
+    File::Spec->catfile( 't', 'todo.list.txt' ),
+    'orig todo_file matches'
+);
+is( $orig->file('done_file'),
+    File::Spec->catfile( 't', 'done.list.txt' ),
+    'orig done_file matches'
+);
 is( $orig->file('report_file'),
-    't/report.list.txt', 'orig report_file matches' );
+    File::Spec->catfile( 't', 'report.list.txt' ),
+    'orig report_file matches'
+);
 
 my $todo_dir = tempdir( 'todo-XXXXXXXXX', CLEANUP => 1, TMPDIR => 1 );
 my $copy = new_ok($class);
@@ -41,18 +51,19 @@ my $copy = new_ok($class);
 foreach my $e (@orig_list) {
     ok( $copy->add($e), 'add entry from orginal list' );
 }
-ok( $copy->save( $todo_dir . '/todo.txt' ), 'save the copy' );
+ok( $copy->save( File::Spec->catfile( $todo_dir, 'todo.txt' ) ),
+    'save the copy' );
 
 is( $copy->file('todo_file'),
-    $todo_dir . '/todo.txt',
+    File::Spec->catfile( $todo_dir, 'todo.txt' ),
     'copy todo_file matches'
 );
 is( $copy->file('done_file'),
-    $todo_dir . '/done.txt',
+    File::Spec->catfile( $todo_dir, 'done.txt' ),
     'copy done_file matches'
 );
 is( $copy->file('report_file'),
-    $todo_dir . '/report.txt',
+    File::Spec->catfile( $todo_dir, 'report.txt' ),
     'copy report_file matches'
 );
 my @copy_list;
@@ -121,7 +132,10 @@ is( $copy->list->[-1]->text,
 
 my $file;
 ok( $file = $copy->file('done_file'), 'get the done_file name' );
-is( $file, $todo_dir . '/done.txt', 'the done_file name what we expected?' );
+is( $file,
+    File::Spec->catfile( $todo_dir, 'done.txt' ),
+    'the done_file name what we expected?'
+);
 
 ok( $copy->addto( $file, 'added text' ), 'Add text to file' );
 
