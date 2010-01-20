@@ -1,13 +1,12 @@
 package Text::Todo::Entry;
 
-# $AFresh1: Entry.pm,v 1.23 2010/01/18 03:04:48 andrew Exp $
+# $AFresh1: Entry.pm,v 1.24 2010/01/19 18:53:36 andrew Exp $
 
 use warnings;
 use strict;
 use Carp;
 
 use Class::Std::Utils;
-use List::Util qw/ first /;
 
 use version; our $VERSION = qv('0.1.0');
 
@@ -134,7 +133,10 @@ use version; our $VERSION = qv('0.1.0');
 
     sub _is_in {
         my ( $self, $tags, $item ) = @_;
-        return defined first { $_ eq $item } $self->$tags;
+        foreach ($self->$tags) {
+            return 1 if $_ eq $item;
+        }
+        return 0;
     }
 
     sub text {
@@ -243,7 +245,7 @@ Text::Todo::Entry - An object for manipulating an entry on a Text::Todo list
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: Entry.pm,v 1.24 2010/01/19 18:53:36 andrew Exp $
+    $Id: Entry.pm,v 1.25 2010/01/20 21:53:01 andrew Exp $
 
 
 =head1 SYNOPSIS
