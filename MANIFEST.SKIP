@@ -9,6 +9,7 @@
 \B\.git\b
 \B\.gitignore\b
 \b_darcs\b
+\b.cvsignore\b
 
 # Avoid Makemaker generated and utility files.
 \bMANIFEST\.bak
