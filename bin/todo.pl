@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $AFresh1: todo.pl,v 1.17 2010/01/16 06:07:13 andrew Exp $
+# $AFresh1: todo.pl,v 1.18 2010/01/19 18:53:36 andrew Exp $
 ########################################################################
 # todo.pl *** a perl version of todo.sh. Uses Text::Todo.
 #
@@ -472,9 +472,9 @@ sub _parse_line {
     if (s/^\s*export\s+//xms) {
         my ( $key, $value ) = /^([^=]+)\s*=\s*"?(.*?)"?\s*$/xms;
         if ($key) {
-            foreach my $k ( keys %config ) {
-                $value =~ s/\$\Q$k\E/$config{$k}/gxms;
-                $value =~ s/\${\Q$k\E}/$config{$k}/gxms;
+            foreach my $k ( keys %{ $config } ) {
+                $value =~ s/\$\Q$k\E/$config->{$k}/gxms;
+                $value =~ s/\${\Q$k\E}/$config->{$k}/gxms;
             }
             foreach my $k ( keys %ENV ) {
                 $value =~ s/\$\Q$k\E/$ENV{$k}/gxms;
@@ -502,7 +502,7 @@ todo.pl - a perl replacement for todo.sh
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: todo.pl,v 1.18 2010/01/19 18:53:36 andrew Exp $
+    $Id: todo.pl,v 1.19 2010/01/21 21:10:38 andrew Exp $
 
 
 =head1 SYNOPSIS
