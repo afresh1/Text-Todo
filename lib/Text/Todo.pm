@@ -1,6 +1,6 @@
 package Text::Todo;
 
-# $AFresh1: Todo.pm,v 1.22 2010/01/19 18:53:36 andrew Exp $
+# $AFresh1: Todo.pm,v 1.23 2010/01/22 01:30:45 andrew Exp $
 
 use warnings;
 use strict;
@@ -403,7 +403,7 @@ __END__
 
 =head1 NAME
 
-Text::Todo - Perl interface to todo_txt files
+Text::Todo - Perl interface to todotxt files
 
 
 =head1 VERSION
@@ -411,7 +411,7 @@ Text::Todo - Perl interface to todo_txt files
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: Todo.pm,v 1.23 2010/01/22 01:30:45 andrew Exp $
+    $Id: Todo.pm,v 1.24 2010/01/22 18:15:06 andrew Exp $
 
 =head1 SYNOPSIS
 
