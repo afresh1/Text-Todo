@@ -27,6 +27,7 @@
 # Avoid temp and backup files.
 ~$
 \.old$
+\.orig$
 \#$
 \b\.#
 \.bak$
