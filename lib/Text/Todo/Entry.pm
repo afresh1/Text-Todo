@@ -1,6 +1,6 @@
 package Text::Todo::Entry;
 
-# $AFresh1: Entry.pm,v 1.24 2010/01/19 18:53:36 andrew Exp $
+# $AFresh1: Entry.pm,v 1.25 2010/01/20 21:53:01 andrew Exp $
 
 use warnings;
 use strict;
@@ -8,7 +8,7 @@ use Carp;
 
 use Class::Std::Utils;
 
-use version; our $VERSION = qv('0.1.0');
+use version; our $VERSION = qv('0.1.1');
 
 {
 
@@ -245,7 +245,7 @@ Text::Todo::Entry - An object for manipulating an entry on a Text::Todo list
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: Entry.pm,v 1.25 2010/01/20 21:53:01 andrew Exp $
+    $Id: Entry.pm,v 1.26 2010/01/22 01:30:45 andrew Exp $
 
 
 =head1 SYNOPSIS
