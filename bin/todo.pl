@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $AFresh1: todo.pl,v 1.19 2010/01/21 21:10:38 andrew Exp $
+# $AFresh1: todo.pl,v 1.20 2010/01/22 01:30:45 andrew Exp $
 ########################################################################
 # todo.pl *** a perl version of todo.sh. Uses Text::Todo.
 #
@@ -109,7 +109,7 @@ sub add {
     my $entry = join q{ }, @entry;
 
     my $todo = Text::Todo->new($config);
-    if ( $todo->add($entry) ) {
+    if ( $todo->add($entry) && $todo->save ) {
         my @list  = $todo->list;
         my $lines = scalar @list;
 
@@ -502,7 +502,7 @@ todo.pl - a perl replacement for todo.sh
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: todo.pl,v 1.20 2010/01/22 01:30:45 andrew Exp $
+    $Id: todo.pl,v 1.21 2010/02/03 18:14:01 andrew Exp $
 
 
 =head1 SYNOPSIS
