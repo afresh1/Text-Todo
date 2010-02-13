@@ -1,6 +1,6 @@
 package Text::Todo::Entry;
 
-# $AFresh1: Entry.pm,v 1.25 2010/01/20 21:53:01 andrew Exp $
+# $AFresh1: Entry.pm,v 1.26 2010/01/22 01:30:45 andrew Exp $
 
 use warnings;
 use strict;
@@ -123,6 +123,11 @@ use version; our $VERSION = qv('0.1.1');
         return;
     }
 
+    sub known_tags {
+        my ( $self ) = @_;
+        return $known_tags_of{ ident($self) };
+    }
+
     sub _tags {
         my ( $self, $tag ) = @_;
         my $ident = ident($self);
@@ -219,9 +224,7 @@ use version; our $VERSION = qv('0.1.1');
 
     sub done {
         my ($self) = @_;
-        my $ident = ident($self);
-
-        return $completion_status_of{$ident};
+        return $completion_status_of{ ident($self) };
     }
 
     sub DESTROY {
@@ -245,7 +248,7 @@ Text::Todo::Entry - An object for manipulating an entry on a Text::Todo list
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: Entry.pm,v 1.26 2010/01/22 01:30:45 andrew Exp $
+    $Id: Entry.pm,v 1.27 2010/02/13 23:06:34 andrew Exp $
 
 
 =head1 SYNOPSIS
@@ -317,7 +320,7 @@ Returns the priority of an entry which may be an empty string if it is
 
 Each tag type generates two accessor functions {tag}s and in_{tag}.
 
-Current tags are context (@) and project (+).
+Default tags are context (@) and project (+).
 
 When creating a new object you can pass in new tags to recognize.
 
@@ -328,7 +331,7 @@ When creating a new object you can pass in new tags to recognize.
 
     my @due_dates = $entry->due_dates;
 
-then @due_dates eq ( '2011-01-01' );
+then @due_dates is ( '2011-01-01' );
 
 and you could also:
 
@@ -338,6 +341,16 @@ and you could also:
 
 
 =over
+
+=item known_tags
+
+    $known_tags = $entry->known_tags;
+
+$known_tags by default would be: 
+
+    { context => '@',
+      project => '+',
+    }
 
 =item {tag}s
 

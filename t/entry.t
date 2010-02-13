@@ -7,13 +7,13 @@
 #       AUTHOR:  Andrew Fresh (AAF), andrew@cpan.org
 #      COMPANY:  Red River Communications
 #      CREATED:  07/10/09 11:32:39
-#     REVISION:  $AFresh1: entry.t,v 1.12 2010/01/15 19:44:32 andrew Exp $
+#     REVISION:  $AFresh1: entry.t,v 1.13 2010/01/15 19:50:15 andrew Exp $
 #===============================================================================
 
 use strict;
 use warnings;
 
-use Test::More tests => 40;
+use Test::More tests => 41;
 
 my $class;
 BEGIN { 
@@ -26,6 +26,7 @@ diag("Testing entry $class $Text::Todo::Entry::VERSION");
 my %sample = (
     text     => '(B) @home @work send email to andrew@cpan.org + +say_thanks',
     priority => 'B',
+    known_tags => { context => '@', project => '+' },
     contexts => [ 'home', 'work' ],
     projects => [ '', 'say_thanks' ],
     prepend  => 'before',
@@ -35,6 +36,7 @@ my %sample = (
 );
 
 my $e = new_ok($class);
+is_deeply( $e->known_tags, $sample{known_tags}, 'check known_tags' );
 
 ok( $e->replace( $sample{text} ), 'Update entry' );
 is( $e->text,     $sample{text},     'Make sure entry matches' );
