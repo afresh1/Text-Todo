@@ -1,6 +1,6 @@
 package Text::Todo;
 
-# $AFresh1: Todo.pm,v 1.23 2010/01/22 01:30:45 andrew Exp $
+# $AFresh1: Todo.pm,v 1.24 2010/01/22 18:15:06 andrew Exp $
 
 use warnings;
 use strict;
@@ -19,6 +19,7 @@ use version; our $VERSION = qv('0.1.1');
 
         my %list_of,
         my %loaded_of,
+        my %known_tags_of,
     );
 
     sub new {
@@ -33,11 +34,22 @@ use version; our $VERSION = qv('0.1.1');
             done_file => undef,
         };
 
+        $known_tags_of{$ident} = {
+            context => '@',
+            project => '+',
+        };
+
         if ($options) {
             if ( ref $options eq 'HASH' ) {
                 foreach my $opt ( keys %{$options} ) {
                     if ( exists $path_of{$ident}{$opt} ) {
                         $self->_path_to( $opt, $options->{$opt} );
+                    }
+                    elsif ( $opt eq 'tags' ) {
+                        foreach my $tag ( keys %{ $options->{$opt} } ) {
+                            $known_tags_of{$ident}{$tag}
+                                = $options->{$opt}{$tag};
+                        }
                     }
                     else {
 
@@ -223,7 +235,11 @@ use version; our $VERSION = qv('0.1.1');
         my $ident = ident($self);
 
         if ( !ref $entry ) {
-            $entry = Text::Todo::Entry->new($entry);
+            $entry = Text::Todo::Entry->new(
+                {   text => $entry,
+                    tags => $self->_known_tags,
+                }
+            );
         }
         elsif ( ref $entry ne 'Text::Todo::Entry' ) {
             croak(
@@ -288,6 +304,33 @@ use version; our $VERSION = qv('0.1.1');
         my @tags = sort keys %available;
 
         return wantarray ? @tags : \@tags;
+    }
+
+    sub _known_tags {
+        my ($self) = @_;
+        my $ident = ident($self);
+
+        my @list = $self->list;
+
+        foreach my $e (@list) {
+            my $kt = $e->known_tags;
+            foreach my $t ( keys %{$kt} ) {
+                if ( !exists $known_tags_of{$ident}{$t} ) {
+                    $known_tags_of{$ident}{$t} = $kt->{$t};
+                }
+            }
+        }
+
+        return $known_tags_of{$ident};
+    }
+
+    sub listtags {
+        my ($self) = @_;
+        my $ident = ident($self);
+
+        my @list = sort keys %{ $self->_known_tags };
+
+        return wantarray ? @list : \@list;
     }
 
     sub archive {
@@ -411,7 +454,7 @@ Text::Todo - Perl interface to todotxt files
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: Todo.pm,v 1.24 2010/01/22 18:15:06 andrew Exp $
+    $Id: Todo.pm,v 1.25 2010/02/13 23:26:44 andrew Exp $
 
 =head1 SYNOPSIS
 
@@ -523,7 +566,11 @@ Since this is so easy to write as:
 
 I think it may become depreciated unless there is demand.
 
-=head2 listtag
+=head2 listtags
+
+Returns a list of the tags known to the list.
+
+=head2 listtag($tag)
 
 Returns tags found in the list sorted by name.  
 

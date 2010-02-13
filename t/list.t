@@ -8,13 +8,13 @@
 #       AUTHOR:  Andrew Fresh (AAF), andrew@cpan.org
 #      COMPANY:  Red River Communications
 #      CREATED:  01/07/10 19:11
-#     REVISION:  $AFresh1: list.t,v 1.13 2010/01/18 02:46:48 andrew Exp $
+#     REVISION:  $AFresh1: list.t,v 1.14 2010/01/20 21:15:15 andrew Exp $
 #===============================================================================
 
 use strict;
 use warnings;
 
-use Test::More tests => 53;
+use Test::More tests => 55;
 
 use File::Temp qw/ tempdir /;
 use File::Spec;
@@ -91,6 +91,14 @@ ok( $copy->move( 3, 1 ), 'move entry 3 to position 1' );
 ok( @copy_list = $copy->list, 'update our list' );
 is( $copy_list[1]->text, $entry_to_move->text,
     'entry is in the new position' );
+
+my @tags;
+ok( @tags = $copy->listtags, 'listtagsfor current list' );
+is_deeply(
+    \@tags,
+    [ 'context', 'project' ],
+    'got the projects we expected'
+);
 
 my @projects;
 ok( @projects = $copy->listproj, 'listproj for current list' );
