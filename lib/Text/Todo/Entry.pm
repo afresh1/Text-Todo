@@ -1,6 +1,6 @@
 package Text::Todo::Entry;
 
-# $AFresh1: Entry.pm,v 1.27 2010/02/13 23:06:34 andrew Exp $
+# $AFresh1: Entry.pm,v 1.28 2010/02/14 00:50:56 andrew Exp $
 
 use warnings;
 use strict;
@@ -49,9 +49,7 @@ use version; our $VERSION = qv('0.1.1');
         );
 
         if ( exists $options->{tags} && ref $options->{tags} eq 'HASH' ) {
-            foreach my $k ( keys %{ $options->{tags} } ) {
-                $tags{$k} = $options->{tags}->{$k};
-            }
+            %tags = ( %tags, %{ $options->{tags} } );
         }
 
         for my $tag ( keys %tags ) {
@@ -263,7 +261,7 @@ Text::Todo::Entry - An object for manipulating an entry on a Text::Todo list
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: Entry.pm,v 1.28 2010/02/14 00:50:56 andrew Exp $
+    $Id: Entry.pm,v 1.29 2010/02/14 06:08:07 andrew Exp $
 
 
 =head1 SYNOPSIS

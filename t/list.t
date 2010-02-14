@@ -8,13 +8,13 @@
 #       AUTHOR:  Andrew Fresh (AAF), andrew@cpan.org
 #      COMPANY:  Red River Communications
 #      CREATED:  01/07/10 19:11
-#     REVISION:  $AFresh1: list.t,v 1.14 2010/01/20 21:15:15 andrew Exp $
+#     REVISION:  $AFresh1: list.t,v 1.15 2010/02/13 23:26:44 andrew Exp $
 #===============================================================================
 
 use strict;
 use warnings;
 
-use Test::More tests => 55;
+use Test::More tests => 58;
 
 use File::Temp qw/ tempdir /;
 use File::Spec;
@@ -92,12 +92,20 @@ ok( @copy_list = $copy->list, 'update our list' );
 is( $copy_list[1]->text, $entry_to_move->text,
     'entry is in the new position' );
 
-my @tags;
-ok( @tags = $copy->listtags, 'listtagsfor current list' );
+my $tags;
+ok( $tags = $copy->known_tags, 'known_tags for current list' );
 is_deeply(
-    \@tags,
-    [ 'context', 'project' ],
-    'got the projects we expected'
+    $tags,
+    { 'context' => '@', 'project' => '+' },
+    'got the tags we expected'
+);
+
+ok( $copy->learn_tag('due_date', 'DUE:'), "Learn due_date tag" );
+ok( $tags = $copy->known_tags, 'known_tags for current list' );
+is_deeply(
+    $tags,
+    { 'context' => '@', 'project' => '+', 'due_date' => 'DUE:' },
+    'got the tags we expected'
 );
 
 my @projects;

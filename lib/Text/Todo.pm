@@ -1,6 +1,6 @@
 package Text::Todo;
 
-# $AFresh1: Todo.pm,v 1.24 2010/01/22 18:15:06 andrew Exp $
+# $AFresh1: Todo.pm,v 1.25 2010/02/13 23:26:44 andrew Exp $
 
 use warnings;
 use strict;
@@ -34,10 +34,10 @@ use version; our $VERSION = qv('0.1.1');
             done_file => undef,
         };
 
-        $known_tags_of{$ident} = {
-            context => '@',
-            project => '+',
-        };
+        my %tags = (
+            context => q{@},
+            project => q{+},
+        );
 
         if ($options) {
             if ( ref $options eq 'HASH' ) {
@@ -45,11 +45,10 @@ use version; our $VERSION = qv('0.1.1');
                     if ( exists $path_of{$ident}{$opt} ) {
                         $self->_path_to( $opt, $options->{$opt} );
                     }
-                    elsif ( $opt eq 'tags' ) {
-                        foreach my $tag ( keys %{ $options->{$opt} } ) {
-                            $known_tags_of{$ident}{$tag}
-                                = $options->{$opt}{$tag};
-                        }
+                    elsif ( $opt eq 'tags'
+                        && ref $options->{$opt} eq 'HASH' )
+                    {
+                        %tags = ( %tags, %{ $options->{$opt} } );
                     }
                     else {
 
@@ -69,6 +68,8 @@ use version; our $VERSION = qv('0.1.1');
                 }
             }
         }
+
+        $known_tags_of{$ident} = \%tags;
 
         my $file = $self->_path_to('todo_file');
         if ( defined $file && -e $file ) {
@@ -149,6 +150,7 @@ use version; our $VERSION = qv('0.1.1');
         $file = $self->file($file);
 
         if ( $list_of{$ident} = $self->listfile($file) ) {
+            $self->known_tags;
             $loaded_of{$ident} = $file;
             return 1;
         }
@@ -237,7 +239,7 @@ use version; our $VERSION = qv('0.1.1');
         if ( !ref $entry ) {
             $entry = Text::Todo::Entry->new(
                 {   text => $entry,
-                    tags => $self->_known_tags,
+                    tags => $known_tags_of{$ident},
                 }
             );
         }
@@ -247,6 +249,8 @@ use version; our $VERSION = qv('0.1.1');
         }
 
         push @{ $list_of{$ident} }, $entry;
+
+        $self->known_tags;
 
         return $entry;
     }
@@ -306,31 +310,43 @@ use version; our $VERSION = qv('0.1.1');
         return wantarray ? @tags : \@tags;
     }
 
-    sub _known_tags {
+    sub learn_tag {
+        my ( $self, $tag, $sigal ) = @_;
+
+        $known_tags_of{ ident $self}{$tag} = $sigal;
+        $self->known_tags;
+
+        return 1;
+    }
+
+    sub known_tags {
         my ($self) = @_;
         my $ident = ident($self);
 
         my @list = $self->list;
+        my %tags = %{ $known_tags_of{$ident} };
 
         foreach my $e (@list) {
             my $kt = $e->known_tags;
             foreach my $t ( keys %{$kt} ) {
-                if ( !exists $known_tags_of{$ident}{$t} ) {
-                    $known_tags_of{$ident}{$t} = $kt->{$t};
+                if ( !exists $tags{$t} ) {
+                    $tags{$t} = $kt->{$t};
                 }
             }
         }
 
+        foreach my $e (@list) {
+            my $kt = $e->known_tags;
+            foreach my $t ( keys %tags ) {
+                if ( !exists $kt->{$t} || $tags{$t} ne $kt->{$t} ) {
+                    $e->learn_tag( $t, $tags{$t} );
+                }
+            }
+        }
+
+        $known_tags_of{$ident} = \%tags;
+
         return $known_tags_of{$ident};
-    }
-
-    sub listtags {
-        my ($self) = @_;
-        my $ident = ident($self);
-
-        my @list = sort keys %{ $self->_known_tags };
-
-        return wantarray ? @list : \@list;
     }
 
     sub archive {
@@ -454,7 +470,7 @@ Text::Todo - Perl interface to todotxt files
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: Todo.pm,v 1.25 2010/02/13 23:26:44 andrew Exp $
+    $Id: Todo.pm,v 1.26 2010/02/14 06:08:07 andrew Exp $
 
 =head1 SYNOPSIS
 
@@ -566,9 +582,15 @@ Since this is so easy to write as:
 
 I think it may become depreciated unless there is demand.
 
-=head2 listtags
+=head2 known_tags
 
-Returns a list of the tags known to the list.
+Returns a reference to a hash of the tags known to the list.
+
+=head2 learn_tag($tag, $sigal)
+
+Let the entire list learn a new tag.  
+If you are working with a list you should use this instead of 
+$entry->learn_tag because it will update all entries.
 
 =head2 listtag($tag)
 
