@@ -1,6 +1,6 @@
 package Text::Todo::Entry;
 
-# $AFresh1: Entry.pm,v 1.26 2010/01/22 01:30:45 andrew Exp $
+# $AFresh1: Entry.pm,v 1.27 2010/02/13 23:06:34 andrew Exp $
 
 use warnings;
 use strict;
@@ -34,6 +34,8 @@ use version; our $VERSION = qv('0.1.1');
         my $self = bless anon_scalar(), $class;
         my $ident = ident($self);
 
+        $text_of{$ident} = q{};
+
         if ( !ref $options ) {
             $options = { text => $options };
         }
@@ -41,36 +43,19 @@ use version; our $VERSION = qv('0.1.1');
             croak 'Invalid parameter passed!';
         }
 
-        $known_tags_of{$ident} = {
+        my %tags = (
             context => q{@},
             project => q{+},
-        };
+        );
 
         if ( exists $options->{tags} && ref $options->{tags} eq 'HASH' ) {
             foreach my $k ( keys %{ $options->{tags} } ) {
-                $known_tags_of{$ident}{$k} = $options->{tags}->{$k};
+                $tags{$k} = $options->{tags}->{$k};
             }
         }
 
-        for my $tag ( keys %{ $known_tags_of{$ident} } ) {
-            ## no critic strict
-            no strict
-                'refs';    # Violates use strict, but allows code generation
-            ## use critic
-
-            if ( !$self->can( $tag . 's' ) ) {
-                *{ $tag . 's' } = sub {
-                    my ($self) = @_;
-                    return $self->_tags($tag);
-                };
-            }
-
-            if ( !$self->can( 'in_' . $tag ) ) {
-                *{ 'in_' . $tag } = sub {
-                    my ( $self, $item ) = @_;
-                    return $self->_is_in( $tag . 's', $item );
-                };
-            }
+        for my $tag ( keys %tags ) {
+            $self->learn_tag( $tag, $tags{$tag} );
         }
 
         $self->replace( $options->{text} );
@@ -78,19 +63,26 @@ use version; our $VERSION = qv('0.1.1');
         return $self;
     }
 
-    sub replace {
-        my ( $self, $text ) = @_;
+    sub _parse_entry {
+        my ($self) = @_;
         my $ident = ident($self);
 
-        $text = defined $text ? $text : q{};
+        delete $tags_of{$ident};
+        delete $completion_status_of{$ident};
+        delete $priority_of{$ident};
 
-        $text_of{$ident} = $text;
+        my $text       = $self->text       || q{};
+        my $known_tags = $self->known_tags || {};
 
-        foreach my $tag ( keys %{ $known_tags_of{$ident} } ) {
-            my $symbol = quotemeta $known_tags_of{$ident}{$tag};
-            $tags_of{$ident}{$tag} = { map { $_ => q{} }
-                    $text =~ / (?:^|\s) $symbol  (\S*)/gxms };
+        foreach my $tag ( keys %{$known_tags} ) {
+            next if !defined $known_tags->{$tag};
+            next if !length $known_tags->{$tag};
+
+            my $sigal = quotemeta $known_tags->{$tag};
+            $tags_of{$ident}{$tag}
+                = { map { $_ => q{} } $text =~ / (?:^|\s) $sigal (\S*)/gxms };
         }
+
         my ( $completed, $priority )
             = $text =~ / $priority_completion_regex /xms;
 
@@ -123,35 +115,61 @@ use version; our $VERSION = qv('0.1.1');
         return;
     }
 
-    sub known_tags {
-        my ( $self ) = @_;
-        return $known_tags_of{ ident($self) };
+    sub replace {
+        my ( $self, $text ) = @_;
+        my $ident = ident($self);
+
+        $text = defined $text ? $text : q{};
+
+        $text_of{$ident} = $text;
+
+        return $self->_parse_entry;
+    }
+
+    sub learn_tag {
+        my ( $self, $tag, $sigal ) = @_;
+        $known_tags_of{ ident $self}{$tag} = $sigal;
+
+        ## no critic strict
+        no strict 'refs';    # Violates use strict, but allows code generation
+        ## use critic
+
+        if ( !$self->can( $tag . 's' ) ) {
+            *{ $tag . 's' } = sub {
+                my ($self) = @_;
+                return $self->_tags($tag);
+            };
+        }
+
+        if ( !$self->can( 'in_' . $tag ) ) {
+            *{ 'in_' . $tag } = sub {
+                my ( $self, $item ) = @_;
+                return $self->_is_in( $tag . 's', $item );
+            };
+        }
+
+        return $self->_parse_entry;
     }
 
     sub _tags {
         my ( $self, $tag ) = @_;
         my $ident = ident($self);
 
-        my @tags = sort keys %{ $tags_of{$ident}{$tag} };
+        my @tags;
+        if ( defined $tags_of{$ident}{$tag} ) {
+            @tags = sort keys %{ $tags_of{$ident}{$tag} };
+        }
         return wantarray ? @tags : \@tags;
     }
 
     sub _is_in {
         my ( $self, $tags, $item ) = @_;
-        foreach ($self->$tags) {
+        return if !defined $item;
+        foreach ( $self->$tags ) {
             return 1 if $_ eq $item;
         }
         return 0;
     }
-
-    sub text {
-        my ($self) = @_;
-        my $ident = ident($self);
-
-        return $text_of{$ident};
-    }
-
-    sub depri { my ($self) = @_; return $self->pri(q{}) }
 
     sub pri {
         my ( $self, $new_pri ) = @_;
@@ -164,13 +182,6 @@ use version; our $VERSION = qv('0.1.1');
         $priority_of{$ident} = $new_pri;
 
         return $self->prepend();
-    }
-
-    sub priority {
-        my ( $self, $new_pri ) = @_;
-        my $ident = ident($self);
-
-        return $priority_of{$ident};
     }
 
     sub prepend {
@@ -226,6 +237,10 @@ use version; our $VERSION = qv('0.1.1');
         my ($self) = @_;
         return $completion_status_of{ ident($self) };
     }
+    sub known_tags { my ($self) = @_; return $known_tags_of{ ident($self) }; }
+    sub priority   { my ($self) = @_; return $priority_of{ ident($self) }; }
+    sub text       { my ($self) = @_; return $text_of{ ident($self) }; }
+    sub depri      { my ($self) = @_; return $self->pri(q{}) }
 
     sub DESTROY {
         my ($self) = @_;
@@ -248,7 +263,7 @@ Text::Todo::Entry - An object for manipulating an entry on a Text::Todo list
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: Entry.pm,v 1.27 2010/02/13 23:06:34 andrew Exp $
+    $Id: Entry.pm,v 1.28 2010/02/14 00:50:56 andrew Exp $
 
 
 =head1 SYNOPSIS
@@ -342,16 +357,6 @@ and you could also:
 
 =over
 
-=item known_tags
-
-    $known_tags = $entry->known_tags;
-
-$known_tags by default would be: 
-
-    { context => '@',
-      project => '+',
-    }
-
 =item {tag}s
 
     @tags = $entry->{tag}s;
@@ -365,6 +370,27 @@ returns true if $entry is in the tag, false if not.
     }
 
 =back
+
+=head2 learn_tag($tag, $sigal)
+
+    $entry->learn_tag('due_date', 'DUE:');
+
+Teaches the entry about an additional tag, same as passing a tags argument to
+new(). See tags()
+
+You can simulate forgetting a tag by setting the sigal to undef or an empty
+string.
+
+=head2 known_tags
+
+    $known_tags = $entry->known_tags;
+
+$known_tags by default would be: 
+
+    { context => '@',
+      project => '+',
+    }
+
 
 =head3 context
 
