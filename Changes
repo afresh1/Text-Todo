@@ -1,6 +1,6 @@
 Revision history for Text-Todo
 
-0.2.0
+0.2.0  Mon Feb 15 18:06:02 2010
        Add the ability for an Entry to learn new tags instead of only in new()
        Make Todo.pm manage tags for the entries in its list
        todo.pl now saves after you add an item
@@ -26,4 +26,4 @@ Revision history for Text-Todo
 0.0.1  Sun Jan 10 19:57:01 2010
        Initial release.
 
-$AFresh1: Changes,v 1.5 2010/01/22 01:30:45 andrew Exp $
+$AFresh1: Changes,v 1.6 2010/02/14 06:08:07 andrew Exp $
