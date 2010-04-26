@@ -1,5 +1,9 @@
 #!/usr/bin/env perl
 
+package Dudelicious;
+
+BEGIN { use FindBin; use lib "$FindBin::Bin/mojo/lib" }
+
 use Mojolicious::Lite;
 
 get '/' => 'index';
