@@ -13,7 +13,7 @@ get '/:groovy' => sub {
     $self->render_text($self->param('groovy'), layout => 'funky');
 };
 
-app->start;
+app->start unless caller();
 __DATA__
 
 @@ index.html.ep
