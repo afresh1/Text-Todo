@@ -1,5 +1,10 @@
 Revision history for Text-Todo
 
+       Added dudelicious, a mojolicious lite app for interfaces.
+       No more List::Utils dependency, was silly.
+       todo.pl works again
+       list.t now uses File::Spec->catfile (to fix Win32 failures)
+
 0.2.0  Mon Feb 15 18:06:02 2010
        Add the ability for an Entry to learn new tags instead of only in new()
        Make Todo.pm manage tags for the entries in its list
@@ -26,4 +31,4 @@ Revision history for Text-Todo
 0.0.1  Sun Jan 10 19:57:01 2010
        Initial release.
 
-$AFresh1: Changes,v 1.6 2010/02/14 06:08:07 andrew Exp $
+$AFresh1: Changes,v 1.7 2010/02/16 01:13:12 andrew Exp $
