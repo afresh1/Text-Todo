@@ -5,7 +5,7 @@ BEGIN {
 	plan skip_all => "Test::Mojo required for testing dudelicious" if $@;
 
 	use lib 'bin';
-	require 'dudelicious';
+	require 'dudelicious.pl';
 	Dudelicious->import;
 }
 
