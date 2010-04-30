@@ -40,32 +40,27 @@ get '/l/:file' => sub {
     my $self   = shift;
     my $file   = $self->stash('file') . '.txt';
     my $format = $self->stash('format') || 'html';
+    my $list   = _get_list( $self, $file );
 
     if ( $format eq 'json' ) {
-        $self->render_json( _get_list( $self, $file ) );
+        $self->render_json($list);
     }
     else {
-        $self->render(
-            list   => _get_list( $self, $file ),
-            layout => 'todotxt'
-        );
+        $self->render( list => $list, layout => 'todotxt' );
     }
 } => 'list';
 
 get '/l/:file/e/:line' => sub {
     my $self   = shift;
     my $file   = $self->stash('file') . '.txt';
-    my $entry  = $self->stash('line') - 1;
     my $format = $self->stash('format') || 'html';
+    my $entry  = _get_list( $self, $file )->[ $self->stash('line') - 1 ];
 
     if ( $format eq 'json' ) {
-        $self->render_json( _get_list( $self, $file )->[$entry] );
+        $self->render_json($entry);
     }
     else {
-        $self->render(
-            entry  => _get_list( $self, $file )->[$entry],
-            layout => 'todotxt'
-        );
+        $self->render( entry => $entry, layout => 'todotxt' );
     }
 } => 'entry';
 
@@ -145,7 +140,7 @@ dudelicious - A Mojolicous interface to your todotxt files
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: dudelicious.pl,v 1.6 2010/04/30 06:18:33 andrew Exp $
+    $Id: dudelicious.pl,v 1.7 2010/04/30 06:23:32 andrew Exp $
 
 =head1 SYNOPSIS
 
