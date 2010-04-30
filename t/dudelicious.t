@@ -1,4 +1,5 @@
 #!perl
+# $AFresh1$
 use Test::More;    # tests => 3;
 
 use strict;
