@@ -2,30 +2,33 @@
 
 package Dudelicious;
 
+use Data::Dumper;
 use version; our $VERSION = qv('0.1.0');
 
-BEGIN { use FindBin; use lib "$FindBin::Bin/mojo/lib" }
+BEGIN {
+    use FindBin;
+    use lib "$FindBin::Bin/../lib";
+    use lib "$FindBin::Bin/mojo/lib";
+}
 
 use Carp qw/ carp croak /;
-
-use Mojolicious::Lite;
+use Digest::MD5 qw/ md5_hex /;
 use Text::Todo;
 
-use Data::Dumper;
-
-my %config = ( todo_dir => $ENV{DUDELICIOUS_HOME} || '.', );
+use Mojolicious::Lite;
+use Mojo::JSON;
 
 app->home->parse( $ENV{DUDELICIOUS_HOME} ) if $ENV{DUDELICIOUS_HOME};
-_read_config_from_file( app->home->rel_file('dudelicious.conf') );
 
-plugin 'default_helpers';
-
-my $todo = Text::Todo->new( \%config );
+plugin 'json_config' => {
+    file    => 'dudelicious.conf',
+    default => { todo_dir => $ENV{DUDELICIOUS_HOME} || '.', },
+};
 
 get '/' => sub {
     my $self = shift;
 
-    my $dir = $todo->file('todo_dir');
+    my $dir = _todo($self)->file('todo_dir');
     opendir my $dh, $dir or croak "Unable to opendir $dir: $!";
     my @files = grep {/\.te?xt$/ixms} readdir $dh;
     closedir $dh;
@@ -34,79 +37,75 @@ get '/' => sub {
 } => 'index';
 
 get '/l/:file' => sub {
-    my $self = shift;
-    my $file = $self->stash('file') . '.txt';
+    my $self   = shift;
+    my $file   = $self->stash('file') . '.txt';
+    my $format = $self->stash('format') || 'html';
 
-    $self->render( list => [ $todo->listfile($file) ], layout => 'todotxt' );
+    if ( $format eq 'json' ) {
+        $self->render_json( _get_list( $self, $file ) );
+    }
+    else {
+        $self->render(
+            list   => _get_list( $self, $file ),
+            layout => 'todotxt'
+        );
+    }
 } => 'list';
 
-get '/l/:file/e/:entry' => sub {
-    my $self  = shift;
-    my $file  = $self->stash('file') . '.txt';
-    my $entry = $self->stash('entry') - 1;
+get '/l/:file/e/:line' => sub {
+    my $self   = shift;
+    my $file   = $self->stash('file') . '.txt';
+    my $entry  = $self->stash('line') - 1;
+    my $format = $self->stash('format') || 'html';
 
-    $self->render(
-        entry  => $todo->listfile($file)->[$entry],
-        layout => 'todotxt'
-    );
+    if ( $format eq 'json' ) {
+        $self->render_json( _get_list( $self, $file )->[$entry] );
+    }
+    else {
+        $self->render(
+            entry  => _get_list( $self, $file )->[$entry],
+            layout => 'todotxt'
+        );
+    }
 } => 'entry';
 
 app->start unless caller();
 
-sub _read_config_from_file {
-    my ($conf_file) = @_;
+sub _todo {
+    my ($c) = @_;
 
-    app->log->debug("Reading configuration from $conf_file.");
-
-    if ( -e $conf_file ) {
-        if ( open FILE, "<", $conf_file ) {
-            my @lines = <FILE>;
-            close FILE;
-
-            my $line = '';
-            foreach my $l (@lines) {
-                next if $l =~ m/^\s*#/;
-                $line .= $l;
-            }
-
-            my $json = Mojo::JSON->new;
-            my $json_config = $json->decode($line) || {};
-            die $json->error if !$json_config && $json->error;
-
-            %config = ( %config, %$json_config );
-
-            unshift @INC, $_
-                for (
-                ref $config{perl5lib} eq 'ARRAY'
-                ? @{ $config{perl5lib} }
-                : $config{perl5lib}
-                );
-        }
-    }
-    else {
-        app->log->debug("Configuration [$conf_file] is not available.");
+    if ( !$c->stash('todo') ) {
+        my $todo = Text::Todo->new( $c->stash('config') );
+        $c->stash( 'todo' => $todo );
     }
 
-    $ENV{SCRIPT_NAME} = $config{base} if defined $config{base};
+    return $c->stash('todo');
+}
 
-    # set proper templates base dir, if defined
-    app->renderer->root( app->home->rel_dir( $config{templatesdir} ) )
-        if defined $config{templatesdir};
+sub _get_list {
+    my ( $c, $file ) = @_;
 
-    # set proper public base dir, if defined
-    app->static->root( app->home->rel_dir( $config{publicdir} ) )
-        if defined $config{publicdir};
+    my $line = 1;
+    return [
+        map ( { line => $line++,
+                md5  => md5_hex( $_->text ),
+                text => $_->text,
+                done => $_->done,
+            },
+            _todo($c)->listfile($file),
+        )
+    ];
 }
 
 __DATA__
 
 @@ list.txt.ep
-% foreach my $i (0..$#{ $list }) {
-%==  include 'entry', entry => $list->[$i], line => $i + 1;
+% foreach my $entry (@{ $list }) {
+%==  include 'entry', entry => $entry;
 % }
 
 @@ entry.txt.ep
-<%= $entry->text %>
+<%= $entry->{text} %>
 
 @@ layouts/todotxt.txt.ep
 %= content
@@ -119,22 +118,21 @@ __DATA__
 @@ list.html.ep
 <h1><%= $file %></h1>
 <ol>
-% foreach my $i (0..$#{ $list }) {
+% foreach my $entry (@{ $list }) {
     <li>
-%=  include 'entry', entry => $list->[$i], line => $i + 1;
+%=  include 'entry', entry => $entry;
     </li>
 % }
 </ol>
 
 @@ entry.html.ep
-<%= $entry->text %>
+<%= $entry->{text} %>
 
 @@ layouts/todotxt.html.ep
 <!doctype html><html>
     <head><title>Funky!</title></head>
     <body><%== content %></body>
 </html>
-
 
 __END__
 
@@ -147,7 +145,7 @@ dudelicious - A Mojolicous interface to your todotxt files
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: dudelicious.pl,v 1.5 2010/04/29 04:50:33 andrew Exp $
+    $Id: dudelicious.pl,v 1.6 2010/04/30 06:18:33 andrew Exp $
 
 =head1 SYNOPSIS
 

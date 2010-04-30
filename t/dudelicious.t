@@ -1,5 +1,5 @@
 #!perl
-# $AFresh1$
+# $AFresh1: dudelicious.t,v 1.6 2010/04/30 01:43:14 andrew Exp $
 use Test::More;    # tests => 3;
 
 use strict;
@@ -9,10 +9,11 @@ use File::Temp qw/ tempdir /;
 use File::Copy qw/ cp /;
 use File::Spec;
 
+my $have_test_json = 1;
+
 BEGIN {
     eval "use Test::Mojo";
     plan skip_all => "Test::Mojo required for testing dudelicious" if $@;
-
 }
 
 my $todo_dir = tempdir( 'todo-XXXXXXXXX', CLEANUP => 1, TMPDIR => 1 );
@@ -52,13 +53,21 @@ foreach my $p (
 
 SKIP: {
         skip "$f does not exist", 3 if !-e $f;
+        diag("Get [$f] from [$p]");
 
-        diag("Getting [$f] from [$p]");
         open my $fh, '<', $f or die $f . ': ' . $!;
-        $t->get_ok($p)->status_is(200)->content_is(
-            do { local $/; <$fh> }
-        );
+        my $content = do { local $/; <$fh> };
         close $fh;
+
+        if ( $f =~ /\.json$/xms ) {
+            $t->get_ok($p)->status_is(200)
+                ->json_content_is( Mojo::JSON->decode($content),
+                'Check JSON content' );
+        }
+        else {
+            $t->get_ok($p)->status_is(200)
+                ->content_is( $content, 'Check content' );
+        }
     }
 }
 
