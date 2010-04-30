@@ -1,4 +1,4 @@
-#!/usr/bin/env perl
+#!/usr/bin/perl
 
 package Dudelicious;
 
@@ -8,7 +8,7 @@ use version; our $VERSION = qv('0.1.0');
 BEGIN {
     use FindBin;
     use lib "$FindBin::Bin/../lib";
-    use lib "$FindBin::Bin/mojo/lib";
+    use lib "$FindBin::Bin/../mojo/lib";
 }
 
 use Carp qw/ carp croak /;
@@ -140,7 +140,7 @@ dudelicious - A Mojolicous interface to your todotxt files
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: dudelicious.pl,v 1.7 2010/04/30 06:23:32 andrew Exp $
+    $Id: dudelicious.pl,v 1.8 2010/04/30 17:17:40 andrew Exp $
 
 =head1 SYNOPSIS
 
