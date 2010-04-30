@@ -36,6 +36,8 @@ get '/' => sub {
     $self->render( files => \@files, layout => 'todotxt' );
 } => 'index';
 
+get '/todotxt' => 'todotxt';
+
 get '/l/:file' => sub {
     my $self   = shift;
     my $file   = $self->stash('file') . '.txt';
@@ -125,9 +127,23 @@ __DATA__
 
 @@ layouts/todotxt.html.ep
 <!doctype html><html>
-    <head><title>Funky!</title></head>
+    <head>
+        <title>Funky!</title>
+        <link rel="stylesheet" href="<%= url_for 'todotxt', format => 'css' %>">
+    </head>
     <body><%== content %></body>
 </html>
+
+@@ todotxt.css.ep
+body {
+        background: LightGoldenRodYellow;
+        color: DarkSlateBlue;
+}
+
+.inplaceeditor-saving {
+        background: url(images/saving.gif) bottom right no-repeat;
+}
+
 
 __END__
 
@@ -140,7 +156,7 @@ dudelicious - A Mojolicous interface to your todotxt files
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: dudelicious.pl,v 1.8 2010/04/30 17:17:40 andrew Exp $
+    $Id: dudelicious.pl,v 1.9 2010/04/30 17:30:57 andrew Exp $
 
 =head1 SYNOPSIS
 
