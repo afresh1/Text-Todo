@@ -29,68 +29,48 @@ Dudelicious->app->log->level('error');
 
 my $t = Test::Mojo->new;
 
-# Index page
-$t->get_ok('/')->status_is(200)->content_like(qr/todo1\.txt/xms);
 
-$t->get_ok('/l/todo1')->status_is(200)->content_is(
-    q{<!doctype html><html>
-    <head><title>Funky!</title></head>
-    <body><h1>todo1</h1>
-<ol>
-    <li>
-(B) +GarageSale @phone schedule Goodwill pickup
-    </li>
-    <li>
-+GarageSale @home post signs around the neighborhood DUE:2006-08-01
-    </li>
-    <li>
-X eat meatballs @home
-    </li>
-    <li>
-(A) @phone thank Mom for the meatballs WAIT
-    </li>
-    <li>
+foreach my $p (
+    '/',
+    '/l/todo1',
+    '/l/todo1.html',
+    '/l/todo1.txt',
+    '/l/todo1.json',
+    '/l/todo1/e/1',
+    '/l/todo1/e/1.html',
+    '/l/todo1/e/1.json',
+    '/l/todo1/t',
+    '/l/todo1/t.txt',
+    '/l/todo1/t.json',
+) {
+    my ($volume, $directories, $file) = File::Spec->splitpath($p);
+    $file ||= 'index.html';
 
-    </li>
-    <li>
-@shopping Eskimo pies
-    </li>
-    <li>
-email andrew@cpan.org for help +report_bug @wherever
-    </li>
-    <li>
-x 2009-01-01 completed with a date
-    </li>
-</ol>
-</body>
-</html>
+    if ($file !~ /\.[^.]+$/xms) {
+        $file .= '.html';
+    }
+
+
+    my $f = File::Spec->catfile( 't', 'dudelicious', $volume, $directories,
+        $file);
+
+    SKIP: {
+        skip "$f does not exist", 3 if ! -e $f;
+        diag( "Getting [$f] from [$p]" );
+        $t->get_ok($p)->status_is(200)->content_is( slurp( $f ) );
+    }
 }
-);
-
-$t->get_ok('/l/todo1.txt')->status_is(200)->content_is(
-    q{(B) +GarageSale @phone schedule Goodwill pickup
-+GarageSale @home post signs around the neighborhood DUE:2006-08-01
-X eat meatballs @home
-(A) @phone thank Mom for the meatballs WAIT
-
-@shopping Eskimo pies
-email andrew@cpan.org for help +report_bug @wherever
-x 2009-01-01 completed with a date
-}
-);
-
-$t->get_ok('/l/todo1/e/1')->status_is(200)->content_is(
-    q{<!doctype html><html>
-    <head><title>Funky!</title></head>
-    <body>(B) +GarageSale @phone schedule Goodwill pickup
-</body>
-</html>
-}
-);
-
-$t->get_ok('/l/todo1/e/1.txt')->status_is(200)->content_is(
-    q{(B) +GarageSale @phone schedule Goodwill pickup
-}
-);
 
 done_testing();
+
+
+sub slurp {
+    my ($file) = @_;
+
+    local $/;
+    open my $fh, '<', $file or die $file . ': ' . $!;
+    my $content = <$fh>;
+    close $fh;
+
+    return $content;
+}
