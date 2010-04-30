@@ -29,48 +29,36 @@ Dudelicious->app->log->level('error');
 
 my $t = Test::Mojo->new;
 
+my @exts = ( q{}, '.html', '.txt', '.json' );
 
 foreach my $p (
     '/',
-    '/l/todo1',
-    '/l/todo1.html',
-    '/l/todo1.txt',
-    '/l/todo1.json',
-    '/l/todo1/e/1',
-    '/l/todo1/e/1.html',
-    '/l/todo1/e/1.json',
-    '/l/todo1/t',
-    '/l/todo1/t.txt',
-    '/l/todo1/t.json',
-) {
-    my ($volume, $directories, $file) = File::Spec->splitpath($p);
+    ( map { '/l/todo1' . $_ } @exts ),
+    ( map { '/l/todo1/e/1' . $_ } @exts ),
+    ( map { '/l/todo1/e/4' . $_ } @exts ),
+    ( map { '/l/todo1/t' . $_ } @exts ),
+    ( map { '/l/todo1/t/project' . $_ } @exts ),
+    ( map { '/l/todo1/t/context' . $_ } @exts ),
+    )
+{
+    my ( $volume, $directories, $file ) = File::Spec->splitpath($p);
+
     $file ||= 'index.html';
-
-    if ($file !~ /\.[^.]+$/xms) {
-        $file .= '.html';
-    }
-
+    $file .= '.html' if $file !~ /\.[^.]+$/xms;
 
     my $f = File::Spec->catfile( 't', 'dudelicious', $volume, $directories,
-        $file);
+        $file );
 
-    SKIP: {
-        skip "$f does not exist", 3 if ! -e $f;
-        diag( "Getting [$f] from [$p]" );
-        $t->get_ok($p)->status_is(200)->content_is( slurp( $f ) );
+SKIP: {
+        skip "$f does not exist", 3 if !-e $f;
+
+        diag("Getting [$f] from [$p]");
+        open my $fh, '<', $f or die $f . ': ' . $!;
+        $t->get_ok($p)->status_is(200)->content_is(
+            do { local $/; <$fh> }
+        );
+        close $fh;
     }
 }
 
 done_testing();
-
-
-sub slurp {
-    my ($file) = @_;
-
-    local $/;
-    open my $fh, '<', $file or die $file . ': ' . $!;
-    my $content = <$fh>;
-    close $fh;
-
-    return $content;
-}
