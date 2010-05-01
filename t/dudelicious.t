@@ -1,5 +1,5 @@
 #!perl
-# $AFresh1: dudelicious.t,v 1.6 2010/04/30 01:43:14 andrew Exp $
+# $AFresh1: dudelicious.t,v 1.7 2010/04/30 06:18:33 andrew Exp $
 use Test::More;    # tests => 3;
 
 use strict;
@@ -53,20 +53,20 @@ foreach my $p (
 
 SKIP: {
         skip "$f does not exist", 3 if !-e $f;
-        diag("Get [$f] from [$p]");
 
         open my $fh, '<', $f or die $f . ': ' . $!;
         my $content = do { local $/; <$fh> };
         close $fh;
 
+        $t->get_ok( $p, {}, undef, "Get [$f] from [$p]" )
+            ->status_is(200, 'With 200 status');
+
         if ( $f =~ /\.json$/xms ) {
-            $t->get_ok($p)->status_is(200)
-                ->json_content_is( Mojo::JSON->decode($content),
+            $t->json_content_is( Mojo::JSON->decode($content),
                 'Check JSON content' );
         }
         else {
-            $t->get_ok($p)->status_is(200)
-                ->content_is( $content, 'Check content' );
+            $t->content_is( $content, 'Check content' );
         }
     }
 }
