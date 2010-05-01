@@ -28,16 +28,22 @@ plugin 'json_config' => {
 
 app->renderer->add_helper(
     todo => sub {
-        state $todo = Text::Todo->new( shift->stash('config') );
+        my ($self) = @_;
+        state $todo = Text::Todo->new( $self->stash('config') );
+
+        my $file = $self->stash('file');
+        if ($file) {
+            $file =~ s/(?:\.txt)?$/\.txt/ixms;
+            $todo->load($file);
+        }
+
         return $todo;
     }
 );
 
 app->renderer->add_helper(
     get_list => sub {
-        my ( $self, $file ) = @_;
-
-        $self->helper('todo')->load($file) if $file;
+        my ($self) = @_;
 
         my $line = 1;
         return [
@@ -66,25 +72,26 @@ get '/' => sub {
 get '/todotxt' => 'todotxt';
 
 get '/l/:file' => sub {
-    my $self   = shift;
-    my $file   = $self->stash('file') . '.txt';
+    my $self = shift;
+
     my $format = $self->stash('format') || 'html';
-    my $list   = $self->helper( 'get_list' => $file );
 
     if ( $format eq 'json' ) {
-        $self->render_json($list);
+        $self->render_json( $self->helper('get_list') );
     }
     else {
-        $self->render( list => $list, layout => 'todotxt' );
+        $self->render(
+            list   => $self->helper('get_list'),
+            layout => 'todotxt'
+        );
     }
 } => 'list';
 
 get '/l/:file/e/:line' => sub {
-    my $self   = shift;
-    my $file   = $self->stash('file') . '.txt';
+    my $self = shift;
+
     my $format = $self->stash('format') || 'html';
-    my $entry
-        = $self->helper( 'get_list' => $file )->[ $self->stash('line') - 1 ];
+    my $entry = $self->helper('get_list')->[ $self->stash('line') - 1 ];
 
     if ( $format eq 'json' ) {
         $self->render_json($entry);
@@ -94,8 +101,23 @@ get '/l/:file/e/:line' => sub {
     }
 } => 'entry';
 
+get '/l/:file/t' => sub {
+    my $self = shift;
+
+    my $format = $self->stash('format') || 'html';
+    my $tags = $self->helper('todo')->known_tags;
+
+    if ( $format eq 'json' ) {
+        $self->render_json($tags);
+    }
+    else {
+        $self->render( tags => $tags, layout => 'todotxt' );
+    }
+} => 'tags';
+
 app->start if !caller();
 
+1;
 __DATA__
 
 @@ list.txt.ep
@@ -105,6 +127,11 @@ __DATA__
 
 @@ entry.txt.ep
 <%= $entry->{text} %>
+
+@@ tags.txt.ep
+% foreach my $tag (keys%{ $tags }) {
+<%= $tag %>, <%= $tags->{$tag} %>
+% }
 
 @@ layouts/todotxt.txt.ep
 %= content
@@ -126,6 +153,12 @@ __DATA__
 
 @@ entry.html.ep
 <%= $entry->{text} %>
+
+@@ tags.html.ep
+% foreach my $tag (keys%{ $tags }) {
+<%= $tag %> == <%= $tags->{$tag} %><br />
+% }
+
 
 @@ layouts/todotxt.html.ep
 <!doctype html><html>
@@ -158,7 +191,7 @@ dudelicious - A Mojolicous interface to your todotxt files
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: dudelicious.pl,v 1.11 2010/05/01 20:26:17 andrew Exp $
+    $Id: dudelicious.pl,v 1.12 2010/05/01 20:54:56 andrew Exp $
 
 =head1 SYNOPSIS
 
