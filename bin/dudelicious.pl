@@ -160,7 +160,8 @@ __DATA__
 
 @@ index.html.ep
 % foreach my $file (@{ $files }) {
-<%== $file %> <br />
+% my ($basename) = $file =~ /^(.*?)(?:\.[^\.]+)?$/xms;
+<a href="<%= url_for 'list' %>/<%= $basename %>"><%= $file %></a><br />
 % }
 
 @@ list.html.ep
@@ -178,7 +179,7 @@ __DATA__
 
 @@ tags.html.ep
 % foreach my $tag (keys%{ $tags }) {
-<%= $tag %> == <%= $tags->{$tag} %><br />
+<a href="<%= url_for 'tag', format => '' %>/<%= $tag %>"><%= $tag %> == <%= $tags->{$tag} %></a><br />
 % }
 
 @@ tag.html.ep
@@ -218,7 +219,7 @@ dudelicious - A Mojolicous interface to your todotxt files
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: dudelicious.pl,v 1.13 2010/05/01 21:11:58 andrew Exp $
+    $Id: dudelicious.pl,v 1.14 2010/05/01 21:47:51 andrew Exp $
 
 =head1 SYNOPSIS
 
