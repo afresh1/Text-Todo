@@ -105,15 +105,31 @@ get '/l/:file/t' => sub {
     my $self = shift;
 
     my $format = $self->stash('format') || 'html';
-    my $tags = $self->helper('todo')->known_tags;
 
     if ( $format eq 'json' ) {
-        $self->render_json($tags);
+        $self->render_json( $self->helper('todo')->known_tags );
     }
     else {
-        $self->render( tags => $tags, layout => 'todotxt' );
+        $self->render(
+            tags   => $self->helper('todo')->known_tags,
+            layout => 'todotxt'
+        );
     }
 } => 'tags';
+
+get '/l/:file/t/:tag' => sub {
+    my $self = shift;
+
+    my $format = $self->stash('format') || 'html';
+    my $items  = $self->helper('todo')->listtag( $self->stash('tag') );
+
+    if ( $format eq 'json' ) {
+        $self->render_json($items);
+    }
+    else {
+        $self->render( items => $items, layout => 'todotxt' );
+    }
+} => 'tag';
 
 app->start if !caller();
 
@@ -129,8 +145,14 @@ __DATA__
 <%= $entry->{text} %>
 
 @@ tags.txt.ep
-% foreach my $tag (keys%{ $tags }) {
+% foreach my $tag (keys %{ $tags }) {
 <%= $tag %>, <%= $tags->{$tag} %>
+% }
+
+@@ tag.txt.ep
+# <%= $tag %>
+% foreach my $item (@{ $items}) {
+<%= $item %>
 % }
 
 @@ layouts/todotxt.txt.ep
@@ -159,6 +181,11 @@ __DATA__
 <%= $tag %> == <%= $tags->{$tag} %><br />
 % }
 
+@@ tag.html.ep
+<h2><%= $tag %></h2>
+% foreach my $item (@{ $items }) {
+<%= $item %><br />
+% }
 
 @@ layouts/todotxt.html.ep
 <!doctype html><html>
@@ -191,7 +218,7 @@ dudelicious - A Mojolicous interface to your todotxt files
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: dudelicious.pl,v 1.12 2010/05/01 20:54:56 andrew Exp $
+    $Id: dudelicious.pl,v 1.13 2010/05/01 21:11:58 andrew Exp $
 
 =head1 SYNOPSIS
 
