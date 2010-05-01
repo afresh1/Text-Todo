@@ -42,10 +42,10 @@ app->renderer->add_helper(
         my $line = 1;
         return [
             map {
-                line => $line++,
-                md5  => md5_hex( $_->text ),
-                text => $_->text,
-                done => $_->done,
+                line     => $line++,
+                    md5  => md5_hex( $_->text ),
+                    text => $_->text,
+                    done => $_->done,
             },
             $self->helper('todo')->list
         ];
@@ -94,7 +94,7 @@ get '/l/:file/e/:line' => sub {
     }
 } => 'entry';
 
-app->start unless caller();
+app->start if !caller();
 
 __DATA__
 
@@ -158,7 +158,7 @@ dudelicious - A Mojolicous interface to your todotxt files
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: dudelicious.pl,v 1.10 2010/05/01 20:23:19 andrew Exp $
+    $Id: dudelicious.pl,v 1.11 2010/05/01 20:26:17 andrew Exp $
 
 =head1 SYNOPSIS
 
