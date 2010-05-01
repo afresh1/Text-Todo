@@ -2,6 +2,7 @@
 
 package Dudelicious;
 
+use 5.010;
 use Data::Dumper;
 use version; our $VERSION = qv('0.1.0');
 
@@ -25,10 +26,36 @@ plugin 'json_config' => {
     default => { todo_dir => $ENV{DUDELICIOUS_HOME} || '.', },
 };
 
+app->renderer->add_helper(
+    todo => sub {
+        state $todo = Text::Todo->new( shift->stash('config') );
+        return $todo;
+    }
+);
+
+app->renderer->add_helper(
+    get_list => sub {
+        my ( $self, $file ) = @_;
+
+        $self->helper('todo')->load($file) if $file;
+
+        my $line = 1;
+        return [
+            map {
+                line => $line++,
+                md5  => md5_hex( $_->text ),
+                text => $_->text,
+                done => $_->done,
+            },
+            $self->helper('todo')->list
+        ];
+    }
+);
+
 get '/' => sub {
     my $self = shift;
 
-    my $dir = _todo($self)->file('todo_dir');
+    my $dir = $self->helper('todo')->file('todo_dir');
     opendir my $dh, $dir or croak "Unable to opendir $dir: $!";
     my @files = grep {/\.te?xt$/ixms} readdir $dh;
     closedir $dh;
@@ -42,7 +69,7 @@ get '/l/:file' => sub {
     my $self   = shift;
     my $file   = $self->stash('file') . '.txt';
     my $format = $self->stash('format') || 'html';
-    my $list   = _get_list( $self, $file );
+    my $list   = $self->helper( 'get_list' => $file );
 
     if ( $format eq 'json' ) {
         $self->render_json($list);
@@ -56,7 +83,8 @@ get '/l/:file/e/:line' => sub {
     my $self   = shift;
     my $file   = $self->stash('file') . '.txt';
     my $format = $self->stash('format') || 'html';
-    my $entry  = _get_list( $self, $file )->[ $self->stash('line') - 1 ];
+    my $entry
+        = $self->helper( 'get_list' => $file )->[ $self->stash('line') - 1 ];
 
     if ( $format eq 'json' ) {
         $self->render_json($entry);
@@ -67,32 +95,6 @@ get '/l/:file/e/:line' => sub {
 } => 'entry';
 
 app->start unless caller();
-
-sub _todo {
-    my ($c) = @_;
-
-    if ( !$c->stash('todo') ) {
-        my $todo = Text::Todo->new( $c->stash('config') );
-        $c->stash( 'todo' => $todo );
-    }
-
-    return $c->stash('todo');
-}
-
-sub _get_list {
-    my ( $c, $file ) = @_;
-
-    my $line = 1;
-    return [
-        map ( { line => $line++,
-                md5  => md5_hex( $_->text ),
-                text => $_->text,
-                done => $_->done,
-            },
-            _todo($c)->listfile($file),
-        )
-    ];
-}
 
 __DATA__
 
@@ -156,7 +158,7 @@ dudelicious - A Mojolicous interface to your todotxt files
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: dudelicious.pl,v 1.9 2010/04/30 17:30:57 andrew Exp $
+    $Id: dudelicious.pl,v 1.10 2010/05/01 20:23:19 andrew Exp $
 
 =head1 SYNOPSIS
 
