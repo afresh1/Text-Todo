@@ -82,6 +82,7 @@ get '/l/:file' => sub {
     else {
         $self->render(
             list   => $self->helper('get_list'),
+            tags   => $self->helper('todo')->known_tags,
             layout => 'todotxt'
         );
     }
@@ -161,11 +162,17 @@ __DATA__
 @@ index.html.ep
 % foreach my $file (@{ $files }) {
 % my ($basename) = $file =~ /^(.*?)(?:\.[^\.]+)?$/xms;
-<a href="<%= url_for 'list' %>/<%= $basename %>"><%= $file %></a><br />
+<a href="<%= url_for 'list', format => '' %>/<%= $basename %>"><%= $file %></a><br />
 % }
 
 @@ list.html.ep
 <h1><%= $file %></h1>
+% if ( $tags ) {
+%   foreach my $tag (keys%{ $tags }) {
+%= include 'tag_menu', tag => $tag
+<br />
+%   }
+% }
 <ol>
 % foreach my $entry (@{ $list }) {
     <li>
@@ -184,9 +191,19 @@ __DATA__
 
 @@ tag.html.ep
 <h2><%= $tag %></h2>
-% foreach my $item (@{ $items }) {
+% foreach my $item (sort @{ $items }) {
 <%= $item %><br />
 % }
+
+@@ tag_menu.html.ep
+% my $items = todo()->listtag($tag);
+<%= $tag %>: 
+<select>
+% foreach my $item (sort @{ $items }) {
+    <option><%= $item %></option>
+% }
+</select>
+
 
 @@ layouts/todotxt.html.ep
 <!doctype html><html>
@@ -219,7 +236,7 @@ dudelicious - A Mojolicous interface to your todotxt files
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: dudelicious.pl,v 1.15 2010/05/05 01:43:03 andrew Exp $
+    $Id: dudelicious.pl,v 1.16 2010/05/05 02:01:08 andrew Exp $
 
 =head1 SYNOPSIS
 
