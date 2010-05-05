@@ -1,6 +1,6 @@
 #!perl
-# $AFresh1: dudelicious.t,v 1.8 2010/05/01 22:38:24 andrew Exp $
-use Test::More;    # tests => 3;
+# $AFresh1: dudelicious.t,v 1.9 2010/05/05 01:24:20 andrew Exp $
+use Test::More tests => 75;
 
 use strict;
 use warnings;
@@ -71,4 +71,4 @@ SKIP: {
     }
 }
 
-done_testing();
+#done_testing();
