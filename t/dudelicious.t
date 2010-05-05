@@ -1,5 +1,5 @@
 #!perl
-# $AFresh1: dudelicious.t,v 1.7 2010/04/30 06:18:33 andrew Exp $
+# $AFresh1: dudelicious.t,v 1.8 2010/05/01 22:38:24 andrew Exp $
 use Test::More;    # tests => 3;
 
 use strict;
@@ -66,7 +66,7 @@ SKIP: {
                 'Check JSON content' );
         }
         else {
-            $t->content_is( $content, 'Check content' );
+            $t->content_like( qr/\Q$content\E/xms, 'Check content' );
         }
     }
 }
