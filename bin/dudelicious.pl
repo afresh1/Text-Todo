@@ -146,11 +146,11 @@ __DATA__
 
 @@ tags.txt.ep
 % foreach my $tag (keys %{ $tags }) {
-<%= $tag %>, <%= $tags->{$tag} %>
+<%= $tag %>: <%= $tags->{$tag} %>
 % }
 
 @@ tag.txt.ep
-# <%= $tag %>
+# <%== $tag %>
 % foreach my $item (@{ $items}) {
 <%= $item %>
 % }
@@ -219,7 +219,7 @@ dudelicious - A Mojolicous interface to your todotxt files
 Since the $VERSION can't be automatically included, 
 here is the RCS Id instead, you'll have to look up $VERSION.
 
-    $Id: dudelicious.pl,v 1.14 2010/05/01 21:47:51 andrew Exp $
+    $Id: dudelicious.pl,v 1.15 2010/05/05 01:43:03 andrew Exp $
 
 =head1 SYNOPSIS
 
