@@ -10,7 +10,7 @@ use Class::Std::Utils;
 use Text::Todo::Entry;
 use File::Spec;
 
-use version; our $VERSION = qv('0.2.0');
+use version; our $VERSION = qv('0.2.1');
 
 {
 

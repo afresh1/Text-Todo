@@ -8,7 +8,7 @@ use Carp;
 
 use Class::Std::Utils;
 
-use version; our $VERSION = qv('0.2.0');
+use version; our $VERSION = qv('0.2.1');
 
 {
 
