@@ -1,5 +1,9 @@
 Revision history for Text-Todo
 
+0.2.1  Sat Dec 27 19:39:17 PST 2014
+       Fixed RT Bug #101154 Thanks to svetoslav.chingov [...] gmail.com
+       Moved repo to https://github.com/afresh1/Text-Todo
+
 0.2.0  Mon Feb 15 18:06:02 2010
        Add the ability for an Entry to learn new tags instead of only in new()
        Make Todo.pm manage tags for the entries in its list
