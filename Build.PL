@@ -28,6 +28,11 @@ my $builder = Module::Build->new(
     ],
     create_makefile_pl => 'traditional',
     create_readme      => 1,
+    meta_merge     => {
+        resources => {
+            repository  => 'https://github.com/afresh1/Text-Todo'
+        }
+    },
 );
 
 $builder->create_build_script();
