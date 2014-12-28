@@ -110,7 +110,7 @@ use version; our $VERSION = qv('0.2.0');
             if ( my ( $pre, $post )
                 = $path_of{$ident}{$type} =~ /^(.*)$1(.*)\.txt$/ixms )
             {
-                foreach my $f qw( todo done report ) {
+                foreach my $f (qw( todo done report )) {
                     if ( !defined $path_of{$ident}{ $f . '_file' } ) {
                         $path_of{$ident}{ $f . '_file' }
                             = $pre . $f . $post . '.txt';
