@@ -48,3 +48,5 @@
 
 # Avoid archives of this distribution
 \bText-Todo-[\d\.\_]+
+^MYMETA\.yml$
+^MYMETA\.json$
