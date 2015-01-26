@@ -67,7 +67,7 @@ my %aliases = (
 );
 
 my %opts;
-getopts( q{+d:fhpPntvV@}, \%opts );
+_get_options();
 
 my $action = shift @ARGV;
 if ( $action && $action eq 'command' ) {
@@ -83,7 +83,7 @@ if ( $opts{h} || !$action ) {
     usage( $opts{h} );
 }
 
-my @unsupported = grep { defined $opts{$_} } qw( @ + f h p P t v V );
+my @unsupported = grep { defined $opts{$_} } qw( f h t v V );
 if (@unsupported) {
     warn 'Unsupported options: ' . ( join q{, }, @unsupported ) . "\n";
 }
@@ -98,6 +98,74 @@ if ( exists $actions{$action} ) {
 }
 else {
     usage();
+}
+
+{
+    my %config;
+    sub _get_options {
+	return \%config if %config;
+
+	my ( $priority, $context, $project );
+	for ( @ARGV ) {
+	    last if /^--?$/;
+	    $priority += () = /P/g;
+	    $context += () = /@/g;
+	    $project += () = /\+/g;
+	}
+	getopts( q{+d:fhpPntvV@}, \%opts );
+	$config{ 'TODOTXT_PLAIN' } = $opts{ 'p' };
+	$config{ 'HIDE_PRIORITY' } = $priority % 2;
+	$config{ 'HIDE_CONTEXT' } = $context % 2;
+	$config{ 'HIDE_PROJECT' } = $project % 2;
+
+	return \%config;
+    }
+}
+
+sub _default_config {
+    my %default = (
+	NONE          => '',
+	BLACK         => "'\\\\033[0;30m'",
+	RED           => "'\\\\033[0;31m'",
+	GREEN         => "'\\\\033[0;32m'",
+	BROWN         => "'\\\\033[0;33m'",
+	BLUE          => "'\\\\033[0;34m'",
+	PURPLE        => "'\\\\033[0;35m'",
+	CYAN          => "'\\\\033[0;36m'",
+	LIGHT_GREY    => "'\\\\033[0;37m'",
+	DARK_GREY     => "'\\\\033[1;30m'",
+	LIGHT_RED     => "'\\\\033[1;31m'",
+	LIGHT_GREEN   => "'\\\\033[1;32m'",
+	YELLOW        => "'\\\\033[1;33m'",
+	LIGHT_BLUE    => "'\\\\033[1;34m'",
+	LIGHT_PURPLE  => "'\\\\033[1;35m'",
+	LIGHT_CYAN    => "'\\\\033[1;36m'",
+	WHITE         => "'\\\\033[1;37m'",
+	DEFAULT       => "'\\\\033[0m'",
+# Default priority->color map.
+	PRI_A         => 'YELLOW',
+	PRI_B         => 'GREEN',
+	PRI_C         => 'LIGHT_BLUE',
+	PRI_X         => 'WHITE',
+# Default project and context colors.
+	COLOR_PROJECT => 'NONE',
+	COLOR_CONTEXT => 'NONE',
+# Default highlight colors.
+	COLOR_DONE    => 'LIGHT_GREY',
+    );
+    while ( my ($key, $value) = each %default ) {
+	$default{ $key } = $default{ $value }
+	if exists $default{ $value } && defined $default{ $value };
+    }
+
+    return \%default;
+}
+
+sub _merge_config {
+    my ( $to, $from ) = @_;
+    while ( my ( $key, $value ) = each %$from ) {
+	$to->{ $key } = $from->{ $key } if $from->{ $key };
+    }
 }
 
 sub add {
@@ -247,7 +315,7 @@ sub list {
     my $todo = Text::Todo->new($config);
 
     my @list = _number_list( $todo->list );
-    my $shown = _show_sorted_list( $term, @list );
+    my $shown = _show_sorted_list( $term, $config, @list );
 
     return _show_list_footer( $shown, scalar @list, $config->{todo_file} );
 }
@@ -260,7 +328,7 @@ sub listall {
         $todo->listfile('todo_file'),
         $todo->listfile('done_file'),
     );
-    my $shown = _show_sorted_list( $term, @list );
+    my $shown = _show_sorted_list( $term, $config, @list );
 
     return _show_list_footer( $shown, scalar @list, $config->{'todo_dir'} );
 }
@@ -279,7 +347,7 @@ sub listfile {
     my $todo = Text::Todo->new($config);
 
     my @list = _number_list( $todo->listfile($file) );
-    my $shown = _show_sorted_list( $term, @list );
+    my $shown = _show_sorted_list( $term, $config, @list );
 
     return _show_list_footer( $shown, scalar @list, $file );
 }
@@ -306,7 +374,7 @@ sub listpri {
         @pri_list = grep { $_->{entry}->priority } @list;
     }
 
-    my $shown = _show_sorted_list( undef, @pri_list );
+    my $shown = _show_sorted_list( undef, $config, @pri_list );
 
     return _show_list_footer( $shown, scalar @list, $config->{todo_file} );
 }
@@ -372,16 +440,51 @@ sub _number_list {
 }
 
 sub _show_sorted_list {
-    my ( $term, @list ) = @_;
+    my ( $term, $config, @list ) = @_;
     $term = defined $term ? quotemeta($term) : q{};
 
     my $shown = 0;
     my @sorted = map { sprintf '%02d %s', $_->{line}, $_->{entry}->text }
         sort { lc $a->{entry}->text cmp lc $b->{entry}->text } @list;
 
+    my $highlight  = sub {
+	return '' if $config->{ lc 'TODOTXT_PLAIN' };
+	my $color = $config->{lc $_[0]};
+	$color =~ s/'\\+033(\[(?:\d+;)*\d+m)'/\033$1/;
+	return $color;
+    };
+
+    my $clr;
+    my $prj_beg = $highlight->( 'COLOR_PROJECT' );
+    my $prj_end = $prj_beg ? $highlight->( 'DEFAULT' ) : '';
+    
+    my $ctx_beg = $highlight->( 'COLOR_CONTEXT' );
+    my $ctx_end = $ctx_beg ? $highlight->( 'DEFAULT' ) : '';
+
+    my $ctx_repl = sub {
+	$config->{ lc 'HIDE_CONTEXT' } ? '' : "$1$ctx_beg$2$ctx_end$clr";
+    };
+    my $prj_repl = sub {
+	$config->{ lc 'HIDE_PROJECT' } ? '' : "$1$prj_beg$2$prj_end$clr";
+    };
+
     foreach my $line ( grep {/$term/xms} @sorted ) {
-        print "$line\n";
-        $shown++;
+	$clr = '';
+	if ( $line =~ /^\d+ x / ) {
+	    $clr = $highlight->('COLOR_DONE');
+	} elsif ( $line =~ /^[0-9]+ \(([A-Z])\) / ) {
+	    $clr = $highlight->( "PRI_$1" );
+	    $clr ||= $highlight->( 'PRI_X' );
+	    $line =~ s/( \([A-Z]\))// if $config->{ lc 'HIDE_PRIORITY' };
+	}
+	my $end_clr = $clr ? $highlight->( 'DEFAULT' ) : '';
+
+	$line =~ s/(\s)(@(?:[^\s]+))/$ctx_repl->()/eg;
+	$line =~ s/(\s)([+](?:[^\s]+))/$prj_repl->()/eg;
+
+	print "$clr$line$end_clr\n";
+	
+	$shown++;
     }
 
     return $shown;
@@ -448,12 +551,17 @@ sub read_config {
     my ($file) = @_;
 
     my %config;
+
+    _merge_config( \%config, _default_config() );
+
     open my $fh, '<', $file or die "Unable to open [$file] : $!\n";
 LINE: while (<$fh>) {
         _parse_line( $_, \%config );
     }
     close $fh or die "Unable to close [$file]: $!\n";
 
+    _merge_config( \%config, _get_options() );
+    
     my %lc_config;
     foreach my $k ( keys %config ) {
         $lc_config{ lc $k } = $config{$k};
