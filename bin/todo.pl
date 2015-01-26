@@ -469,8 +469,8 @@ sub _parse_line {
     $line =~ s/\s*\#.*$//xms;
     return if !$line;
 
-    if (s/^\s*export\s+//xms) {
-        my ( $key, $value ) = /^([^=]+)\s*=\s*"?(.*?)"?\s*$/xms;
+    if ($line =~ s/^\s*export\s+//xms) {
+        my ( $key, $value ) = $line =~ /^([^=]+)\s*=\s*"?(.*?)"?\s*$/xms;
         if ($key) {
             foreach my $k ( keys %{ $config } ) {
                 $value =~ s/\$\Q$k\E/$config->{$k}/gxms;
