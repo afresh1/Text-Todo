@@ -28,3 +28,5 @@ Add support for extensible plugins.
 Move more parts from todo.pl into modules to make it easy to add tests.
 
 And of course, more tests.
+
+Clean up "uninitialized value" warnings in output when run without a config file.
