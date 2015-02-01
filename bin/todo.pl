@@ -124,7 +124,7 @@ else {
 
 sub _default_config {
     my %default = (
-	NONE          => '',
+	NONE          => '_NONE_',
 	BLACK         => "'\\\\033[0;30m'",
 	RED           => "'\\\\033[0;31m'",
 	GREEN         => "'\\\\033[0;32m'",
@@ -450,6 +450,7 @@ sub _show_sorted_list {
     my $highlight  = sub {
 	return '' if $config->{ lc 'TODOTXT_PLAIN' };
 	my $color = $config->{lc $_[0]};
+	return '' if $color eq '_NONE_';
 	$color =~ s/'\\+033(\[(?:\d+;)*\d+m)'/\033$1/;
 	return $color;
     };
