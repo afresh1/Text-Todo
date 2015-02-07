@@ -688,12 +688,9 @@ No bugs have been reported.
 Known limitations:
 
 Does not support some command line arguments. 
-    @, +, f, h, p, P, t, v or V.
+    f, h, t, v or V.
 
 Does not yet support some actions.  Specifically, command, help and report. 
-
-Does not colorize output.
-
 
 =head1 AUTHOR
 
