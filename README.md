@@ -30,3 +30,5 @@ Move more parts from todo.pl into modules to make it easy to add tests.
 And of course, more tests.
 
 Clean up "uninitialized value" warnings in output when run without a config file.
+
+General improvements are super welcome, such as making perlcritic.t pass.
