@@ -124,7 +124,7 @@ else {
 
 sub _default_config {
     my %default = (
-	NONE          => '_NONE_',
+	NONE          => '',
 	BLACK         => "'\\\\033[0;30m'",
 	RED           => "'\\\\033[0;31m'",
 	GREEN         => "'\\\\033[0;32m'",
@@ -447,44 +447,12 @@ sub _show_sorted_list {
     my @sorted = map { sprintf '%02d %s', $_->{line}, $_->{entry}->text }
         sort { lc $a->{entry}->text cmp lc $b->{entry}->text } @list;
 
-    my $highlight  = sub {
-	return '' if $config->{ lc 'TODOTXT_PLAIN' };
-	my $color = $config->{lc $_[0]};
-	return '' if $color eq '_NONE_';
-	$color =~ s/'\\+033(\[(?:\d+;)*\d+m)'/\033$1/;
-	return $color;
-    };
-
-    my $clr;
-    my $prj_beg = $highlight->( 'COLOR_PROJECT' );
-    my $prj_end = $prj_beg ? $highlight->( 'DEFAULT' ) : '';
+    use Text::Todo::Filter;
+    my $filter = Text::Todo::Filter::make_filter( $config );
     
-    my $ctx_beg = $highlight->( 'COLOR_CONTEXT' );
-    my $ctx_end = $ctx_beg ? $highlight->( 'DEFAULT' ) : '';
-
-    my $ctx_repl = sub {
-	$config->{ lc 'HIDE_CONTEXT' } ? '' : "$1$ctx_beg$2$ctx_end$clr";
-    };
-    my $prj_repl = sub {
-	$config->{ lc 'HIDE_PROJECT' } ? '' : "$1$prj_beg$2$prj_end$clr";
-    };
-
     foreach my $line ( grep {/$term/xms} @sorted ) {
-	$clr = '';
-	if ( $line =~ /^\d+ x / ) {
-	    $clr = $highlight->('COLOR_DONE');
-	} elsif ( $line =~ /^[0-9]+ \(([A-Z])\) / ) {
-	    $clr = $highlight->( "PRI_$1" );
-	    $clr ||= $highlight->( 'PRI_X' );
-	    $line =~ s/( \([A-Z]\))// if $config->{ lc 'HIDE_PRIORITY' };
-	}
-	my $end_clr = $clr ? $highlight->( 'DEFAULT' ) : '';
+	print $filter->( $line ), "\n";
 
-	$line =~ s/(\s)(@(?:[^\s]+))/$ctx_repl->()/eg;
-	$line =~ s/(\s)([+](?:[^\s]+))/$prj_repl->()/eg;
-
-	print "$clr$line$end_clr\n";
-	
 	$shown++;
     }
 
