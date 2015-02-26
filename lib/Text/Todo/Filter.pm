@@ -51,5 +51,30 @@ sub make_filter {
 }
 
 1;
+__END__
 
+=encoding utf8
+
+=head1 NAME
+
+Text::Todo::Filter - Output coloring and suppressing i.e. filtering
+
+=head1 SYNOPSIS
+
+    use Text::Todo::Config;
+    use Text::Todo::Filter;
+
+    my $config = Text::Todo::Config::make_config( $hash_ref ... );
+    my $filter = Text::Todo::Filter::make_filter($config);
+    $filter->("string_to_filter");
+
+=head1 DESCRIPTION
+
+Filter.pm provides filtering based on a configuration stored in a hash.
+
+=head1 FUNCTIONS
+
+=head2 make_filter
+
+See the synopsis and L<Text::Todo::Config>
 

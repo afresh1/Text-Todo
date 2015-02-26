@@ -3,67 +3,15 @@ use warnings;
 
 use Test::More;
 
+use Text::Todo::Config;
 use Text::Todo::Filter;
 
 my $f;
-my $dc = _expand(
-    {
-	NONE          => '',
-	BLACK         => "'\\\\033[0;30m'",
-	RED           => "'\\\\033[0;31m'",
-	GREEN         => "'\\\\033[0;32m'",
-	BROWN         => "'\\\\033[0;33m'",
-	BLUE          => "'\\\\033[0;34m'",
-	PURPLE        => "'\\\\033[0;35m'",
-	CYAN          => "'\\\\033[0;36m'",
-	LIGHT_GREY    => "'\\\\033[0;37m'",
-	DARK_GREY     => "'\\\\033[1;30m'",
-	LIGHT_RED     => "'\\\\033[1;31m'",
-	LIGHT_GREEN   => "'\\\\033[1;32m'",
-	YELLOW        => "'\\\\033[1;33m'",
-	LIGHT_BLUE    => "'\\\\033[1;34m'",
-	LIGHT_PURPLE  => "'\\\\033[1;35m'",
-	LIGHT_CYAN    => "'\\\\033[1;36m'",
-	WHITE         => "'\\\\033[1;37m'",
-	DEFAULT       => "'\\\\033[0m'",
-# Default priority->color map.
-	PRI_A         => 'YELLOW',
-	PRI_B         => 'GREEN',
-	PRI_C         => 'LIGHT_BLUE',
-	PRI_X         => 'WHITE',
-# Default project and context colors.
-	COLOR_PROJECT => 'NONE',
-	COLOR_CONTEXT => 'NONE',
-# Default highlight colors.
-	COLOR_DONE    => 'LIGHT_GREY',
-    }
-    );
-
-sub _expand {
-    my $cf = shift;
-    while ( my ($key, $value) = each %$cf ) {
-	$cf->{ $key } = $cf->{ $value }
-	if exists $cf->{ $value } && defined $cf->{ $value };
-    }
-    return $cf;
-}
-
-sub _merge_config {
-    my ( $to, $from ) = @_;
-    while ( my ( $key, $value ) = each %$from ) {
-	$to->{ $key } = $from->{ $key } if $from->{ $key };
-    }
-    return $to;
-}
 
 sub setup {
-    my $cf = {};
-    _expand( _merge_config( $cf, _expand($_) ) ) for @_ ;
-    my %config;
-    while ( my ($k, $v) = each %$cf ) {
-	$config{lc $k} = $v;
-    }
-    $f = Text::Todo::Filter::make_filter(\%config);
+    my $dc = Text::Todo::Config::default_config();
+    my $config = Text::Todo::Config::make_config( $dc, @_ );
+    $f = Text::Todo::Filter::make_filter( $config );
 }
 
 sub test_filter {
@@ -75,7 +23,7 @@ sub test_filter {
 #
 # check the highlighting of prioritized tasks
 #
-setup( $dc );
+setup();
 my @source = (
     '1 (A) @con01 +prj01 -- Some project 01 task, pri A',
     '2 (B) @con02 +prj02 -- Some project 02 task, pri B',
@@ -102,13 +50,15 @@ test_filter(\@source, \@expected, 'default highlighting');
 # check changing the color definitions into something other than ANSI color
 # escape sequences
 #
-setup( $dc,
+setup(
 {
     YELLOW     => '${color yellow}',
     GREEN      => '${color green}',
     LIGHT_BLUE => '${color LightBlue}',
     WHITE      => '${color white}',
     DEFAULT    => '${color}',
+},
+{
     PRI_A => 'YELLOW',
     PRI_B => 'GREEN',
     PRI_C => 'LIGHT_BLUE',
@@ -131,7 +81,7 @@ test_filter(\@source, \@expected, 'customized highlighting');
 #
 # check defining highlightings for more priorities than the default A, B, C
 #
-setup( $dc,
+setup(
 {
     PRI_E => 'BROWN',
     PRI_Z => 'LIGHT_PURPLE',
@@ -153,7 +103,7 @@ test_filter(\@source, \@expected, 'additional highlighting pri E+Z');
 #
 # check changing the fallback highlighting for undefined priorities
 #
-setup( $dc,
+setup(
 {
     PRI_X => 'BROWN',
 }
@@ -174,7 +124,7 @@ test_filter(\@source, \@expected, 'different highlighting for pri X');
 #
 # check highlighting of done (but not yet archived) tasks
 #
-setup( $dc );
+setup();
 
 @source = (
     '1 (A) smell the uppercase Roses +flowers @outside',
@@ -211,7 +161,7 @@ test_filter(\@source, \@expected, 'highlighting of done tasks');
 #
 # check highlighting with hidden contexts/projects
 #
-setup( $dc,
+setup(
 {
     HIDE_CONTEXT => 1,
     HIDE_PROJECT => 1,
@@ -234,7 +184,7 @@ test_filter(\@source, \@expected, 'highlighting with hidden contexts/projects');
 #
 # check that priorities are only matched at the start of the task
 #
-setup( $dc );
+setup();
 @source = (
     '1 (D) some prioritized task',
     '2 not prioritized',
@@ -252,7 +202,7 @@ test_filter(\@source, \@expected, 'highlighting priority position');
 #
 # config specifying COLOR_PROJECT and COLOR_CONTEXT
 #
-setup( $dc,
+setup(
 {
     COLOR_CONTEXT => "'\\\\033[1m'",
     COLOR_PROJECT => "'\\\\033[2m'",
@@ -285,7 +235,7 @@ test_filter(\@source, \@expected, 'highlighting for contexts and projects');
 #
 # turn highlighting off
 #
-setup( $dc,
+setup(
 {
     COLOR_CONTEXT => "'\\\\033[1m'",
     COLOR_PROJECT => "'\\\\033[2m'",
@@ -308,7 +258,7 @@ test_filter(\@source, \@expected, 'turn highlighting off');
 #
 # suppressing display of contexts
 #
-setup( $dc,
+setup(
 {
     COLOR_CONTEXT => "'\\\\033[1m'",
     COLOR_PROJECT => "'\\\\033[2m'",
@@ -337,7 +287,7 @@ test_filter(\@source, \@expected, 'suppressing display of contexts');
 #
 # suppressing display of projects
 #
-setup( $dc,
+setup(
 {
     COLOR_CONTEXT => "'\\\\033[1m'",
     COLOR_PROJECT => "'\\\\033[2m'",
@@ -360,7 +310,7 @@ test_filter(\@source, \@expected, 'suppressing display of projects');
 #
 # suppressing display of priorities
 #
-setup( $dc,
+setup(
 {
     COLOR_CONTEXT => "'\\\\033[1m'",
     COLOR_PROJECT => "'\\\\033[2m'",

@@ -13,8 +13,8 @@
 use strict;
 use warnings;
 
-use Getopt::Std;
 use Text::Todo;
+use Text::Todo::Config;
 
 use version; our $VERSION = qv('0.1.2');
 
@@ -66,8 +66,8 @@ my %aliases = (
     p     => 'pri',
 );
 
-my %opts;
-_get_options();
+my (%opts, %cl_opts_config);
+Text::Todo::Config::get_options(\%opts, \%cl_opts_config);
 
 my $action = shift @ARGV;
 if ( $action && $action eq 'command' ) {
@@ -93,79 +93,15 @@ if ( $opts{d} ) {
 }
 
 if ( exists $actions{$action} ) {
-    my $config = read_config($config_file);
+    my $config = Text::Todo::Config::make_config(
+	Text::Todo::Config::default_config(),
+	read_config($config_file),
+	\%cl_opts_config
+	);
     my $result = $actions{$action}->( $config, @ARGV );
 }
 else {
     usage();
-}
-
-{
-    my %config;
-    sub _get_options {
-	return \%config if %config;
-
-	my ( $priority, $context, $project );
-	for ( @ARGV ) {
-	    last if /^--?$/;
-	    $priority += () = /P/g;
-	    $context += () = /@/g;
-	    $project += () = /\+/g;
-	}
-	getopts( q{+d:fhpPntvV@}, \%opts );
-	$config{ 'TODOTXT_PLAIN' } = $opts{ 'p' };
-	$config{ 'HIDE_PRIORITY' } = $priority % 2;
-	$config{ 'HIDE_CONTEXT' } = $context % 2;
-	$config{ 'HIDE_PROJECT' } = $project % 2;
-
-	return \%config;
-    }
-}
-
-sub _default_config {
-    my %default = (
-	NONE          => '',
-	BLACK         => "'\\\\033[0;30m'",
-	RED           => "'\\\\033[0;31m'",
-	GREEN         => "'\\\\033[0;32m'",
-	BROWN         => "'\\\\033[0;33m'",
-	BLUE          => "'\\\\033[0;34m'",
-	PURPLE        => "'\\\\033[0;35m'",
-	CYAN          => "'\\\\033[0;36m'",
-	LIGHT_GREY    => "'\\\\033[0;37m'",
-	DARK_GREY     => "'\\\\033[1;30m'",
-	LIGHT_RED     => "'\\\\033[1;31m'",
-	LIGHT_GREEN   => "'\\\\033[1;32m'",
-	YELLOW        => "'\\\\033[1;33m'",
-	LIGHT_BLUE    => "'\\\\033[1;34m'",
-	LIGHT_PURPLE  => "'\\\\033[1;35m'",
-	LIGHT_CYAN    => "'\\\\033[1;36m'",
-	WHITE         => "'\\\\033[1;37m'",
-	DEFAULT       => "'\\\\033[0m'",
-# Default priority->color map.
-	PRI_A         => 'YELLOW',
-	PRI_B         => 'GREEN',
-	PRI_C         => 'LIGHT_BLUE',
-	PRI_X         => 'WHITE',
-# Default project and context colors.
-	COLOR_PROJECT => 'NONE',
-	COLOR_CONTEXT => 'NONE',
-# Default highlight colors.
-	COLOR_DONE    => 'LIGHT_GREY',
-    );
-    while ( my ($key, $value) = each %default ) {
-	$default{ $key } = $default{ $value }
-	if exists $default{ $value } && defined $default{ $value };
-    }
-
-    return \%default;
-}
-
-sub _merge_config {
-    my ( $to, $from ) = @_;
-    while ( my ( $key, $value ) = each %$from ) {
-	$to->{ $key } = $from->{ $key } if $from->{ $key };
-    }
 }
 
 sub add {
@@ -521,22 +457,13 @@ sub read_config {
 
     my %config;
 
-    _merge_config( \%config, _default_config() );
-
     open my $fh, '<', $file or die "Unable to open [$file] : $!\n";
 LINE: while (<$fh>) {
         _parse_line( $_, \%config );
     }
     close $fh or die "Unable to close [$file]: $!\n";
 
-    _merge_config( \%config, _get_options() );
-    
-    my %lc_config;
-    foreach my $k ( keys %config ) {
-        $lc_config{ lc $k } = $config{$k};
-    }
-
-    return \%lc_config;
+    return \%config;
 }
 
 sub _parse_line {
@@ -656,7 +583,7 @@ No bugs have been reported.
 Known limitations:
 
 Does not support some command line arguments. 
-    @, +, f, h, p, P, t, v or V.
+    f, h, t, v or V.
 
 Does not yet support some actions.  Specifically, command, help and report. 
 
