@@ -234,9 +234,10 @@ sub mark_done {
     if ( $entry->do && $todo->save ) {
         my $status = print $line, ': ', $entry->text, "\n",
             'TODO: ', $line, " marked as done.\n";
-        if ( !$opts{a} ) {
-            return archive($config);
-        }
+
+	if ( $config->{ lc 'TODOTXT_AUTO_ARCHIVE' } ) {
+	    return archive( $config );
+	}
         return $status;
     }
     die "Unable to mark as done\n";

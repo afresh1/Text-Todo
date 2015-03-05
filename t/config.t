@@ -82,40 +82,73 @@ is_deeply(Text::Todo::Config::make_config(
 # check options detection
 #
 my (%opts, %opts_config);
-@ARGV = qw( -p );
-Text::Todo::Config::get_options(\%opts, \%opts_config);
+
+sub setup {
+    @ARGV = @_;
+    %opts = ();
+    %opts_config = ();
+    Text::Todo::Config::get_options(\%opts, \%opts_config);
+}
+
+setup qw( -p );
 is_deeply(\%opts_config,
 	  {
-	      TODOTXT_PLAIN => 1,
-	      HIDE_PRIORITY => 0,
-	      HIDE_CONTEXT  => 0,
-	      HIDE_PROJECT  => 0,
+	      TODOTXT_PLAIN        => 1,
+	      HIDE_PRIORITY        => 0,
+	      HIDE_CONTEXT         => 0,
+	      HIDE_PROJECT         => 0,
+	      TODOTXT_AUTO_ARCHIVE => 1,
 	  },
 	  'get_options - -p option present');
 
-@ARGV = ();
-%opts = ();
-%opts_config = ();
-Text::Todo::Config::get_options(\%opts, \%opts_config);
+setup ();
 is_deeply(\%opts_config,
 	  {
-	      TODOTXT_PLAIN => '',
-	      HIDE_PRIORITY => 0,
-	      HIDE_CONTEXT  => 0,
-	      HIDE_PROJECT  => 0,
+	      TODOTXT_PLAIN        => '',
+	      HIDE_PRIORITY        => 0,
+	      HIDE_CONTEXT         => 0,
+	      HIDE_PROJECT         => 0,
+	      TODOTXT_AUTO_ARCHIVE => 1,
 	  },
 	  'get_options - -p option missing');
 
-@ARGV = qw( -P@@+++ -P -P  -PP );
-%opts = ();
-%opts_config = ();
-Text::Todo::Config::get_options(\%opts, \%opts_config);
+setup qw( -+ -+ -- -+ );
+is( $opts_config{ HIDE_CONTEXT }, 0, 'get_options - processing stops at --' );
+
+setup qw( -+ -+ - -+ );
+is( $opts_config{ HIDE_CONTEXT }, 0, 'get_options - processing stops at -' );
+
+setup qw( -apd list -P);
+is( $opts_config{ HIDE_PRIORITY },
+    1,
+    'get_options - reads args following non-bundled paths' );
+
+setup qw( -dP/todo.cfg list );
+is( $opts_config{ HIDE_PRIORITY },
+    0,
+    'get_options - chars from bundled paths are not considered options' );
+
+setup qw( -aA -a -dP/todo.cfg list );
+is( $opts_config{ TODOTXT_AUTO_ARCHIVE },
+    0,
+    'get_options - switching a and A options: -a is final' );
+
+setup qw( -aA -dP/todo.cfg list );
+is( $opts_config{ TODOTXT_AUTO_ARCHIVE },
+    1,
+    'get_options - switching a and A options: -A is final' );
+
+setup qw( -dt/todo.cfg  --- -P ls );
+is( $opts{ P }, 1, 'get_options - three dashes pass' );
+
+setup qw( -P@@+++ -P -P  -PP );
 is_deeply(\%opts_config,
 	  {
-	      TODOTXT_PLAIN => '',
-	      HIDE_PRIORITY => 1,
-	      HIDE_CONTEXT  => 0,
-	      HIDE_PROJECT  => 1,
+	      TODOTXT_PLAIN        => '',
+	      HIDE_PRIORITY        => 1,
+	      HIDE_CONTEXT         => 0,
+	      HIDE_PROJECT         => 1,
+	      TODOTXT_AUTO_ARCHIVE => 1,
 	  },
 	  'get_options - switching P, + and @ options');
 

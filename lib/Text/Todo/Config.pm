@@ -55,17 +55,40 @@ sub get_options {
     my ($opts, $config) = @_;
 
     my ( $priority, $context, $project ) = ( 0, 0, 0 );
+    my $auto_archive;
+
+    # make sure three or more dashes pass as in todo.sh
+    @ARGV = map { /^---+$/ ? () : $_ } @ARGV;
+
+    my @args;
     for ( @ARGV ) {
 	last if /^--?$/;
+	push @args, ( $_ );
+    }
+    # strip bundled config file i.e. cases like -dpath_to_todo.cfg
+    @args = map { s/^(-+[^d]*)d.+/$1/; /^-+$/ ? () : $_ } @args;
+
+    my $previous = '';
+    for ( @args ) {
+	# the first non-option should not be preceded by a -d
+	last if /^[^-]/ && $previous !~ /^-+[+fhpPntvV\@aA]*d$/;
 	$priority += () = /P/g;
 	$context += () = /@/g;
 	$project += () = /\+/g;
+	
+	scalar reverse =~ /(a|A)/;
+	$auto_archive = $1;
+	    
+	$previous = $_;
     }
-    Getopt::Std::getopts( q{+d:fhpPntvV@}, $opts );
+
+    Getopt::Std::getopts( q{+d:fhpPntvV@aA}, $opts );
     $config->{ 'TODOTXT_PLAIN' } = defined $opts->{ 'p' };
     $config->{ 'HIDE_PRIORITY' } = $priority % 2;
     $config->{ 'HIDE_CONTEXT' } = $context % 2;
     $config->{ 'HIDE_PROJECT' } = $project % 2;
+    $config->{ 'TODOTXT_AUTO_ARCHIVE' } = defined $auto_archive
+	? ( $auto_archive eq 'a' ? 0 : 1 ) : 1;
 }
 
 sub default_config {
@@ -117,7 +140,7 @@ Provides a default color scheme.
     get_options(\%opts, \%cl_opts_config);
 
 A wrapper around Getopt::Std::getopts. Sets up %opts by a call to
-getopts(\%opts). Checks p, P, @ and + options and fills %cl_opts_config 
+getopts(\%opts). Checks a, A, p, P, @ and + options and fills %cl_opts_config 
 accordingly.
 
 =head2 make_config
