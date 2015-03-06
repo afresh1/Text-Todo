@@ -83,7 +83,7 @@ if ( $opts{h} || !$action ) {
     usage( $opts{h} );
 }
 
-my @unsupported = grep { defined $opts{$_} } qw( f h t v V );
+my @unsupported = grep { defined $opts{$_} } qw( f h v V );
 if (@unsupported) {
     warn 'Unsupported options: ' . ( join q{, }, @unsupported ) . "\n";
 }
@@ -104,12 +104,23 @@ else {
     usage();
 }
 
+sub _date {
+    use Time::localtime;
+
+    my $year = localtime->year() + 1900;
+    my $month = localtime->mon() + 1;
+    my $day = localtime->mday();
+
+    return sprintf( "%d-%02d-%02d", $year, $month, $day );
+}
+
 sub add {
     my ( $config, @entry ) = @_;
     if ( !@entry ) {
         die "usage: todo.pl add 'item'\n";
     }
 
+    unshift( @entry, _date() ) if $config->{ lc 'TODOTXT_DATE_ON_ADD' };
     my $entry = join q{ }, @entry;
 
     my $todo = Text::Todo->new($config);
@@ -130,6 +141,7 @@ sub addto {
         die "usage: todo.pl addto DEST 'TODO ITEM'\n";
     }
 
+    unshift ( @entry, _date() ) if $config->{ lc 'TODOTXT_DATE_ON_ADD' };
     my $entry = join q{ }, @entry;
 
     my $todo = Text::Todo->new($config);
@@ -584,7 +596,7 @@ No bugs have been reported.
 Known limitations:
 
 Does not support some command line arguments. 
-    f, h, t, v or V.
+    f, h, v or V.
 
 Does not yet support some actions.  Specifically, command, help and report. 
 

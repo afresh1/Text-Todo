@@ -55,7 +55,7 @@ sub get_options {
     my ($opts, $config) = @_;
 
     my ( $priority, $context, $project ) = ( 0, 0, 0 );
-    my $auto_archive;
+    my ( $auto_archive_opt, $txt_plain_opt, $date_on_add_opt );
 
     # make sure three or more dashes pass as in todo.sh
     @ARGV = map { /^---+$/ ? () : $_ } @ARGV;
@@ -71,24 +71,32 @@ sub get_options {
     my $previous = '';
     for ( @args ) {
 	# the first non-option should not be preceded by a -d
-	last if /^[^-]/ && $previous !~ /^-+[+fhpPntvV\@aA]*d$/;
+	last if /^[^-]/ && $previous !~ /^-+[+cfhpPntTvV\@aA]*d$/;
 	$priority += () = /P/g;
 	$context += () = /@/g;
 	$project += () = /\+/g;
-	
-	scalar reverse =~ /(a|A)/;
-	$auto_archive = $1;
+
+	my $reversed = scalar reverse;
+	$reversed =~ /(a|A)/;
+	$auto_archive_opt = $1;
+	$reversed =~ /(c|p)/;
+	$txt_plain_opt = $1;
+	$reversed =~ /(t|T)/;
+	$date_on_add_opt = $1;
 	    
 	$previous = $_;
     }
 
-    Getopt::Std::getopts( q{+d:fhpPntvV@aA}, $opts );
-    $config->{ 'TODOTXT_PLAIN' } = defined $opts->{ 'p' };
+    Getopt::Std::getopts( q{+d:cfhpPntTvV@aA}, $opts );
     $config->{ 'HIDE_PRIORITY' } = $priority % 2;
     $config->{ 'HIDE_CONTEXT' } = $context % 2;
     $config->{ 'HIDE_PROJECT' } = $project % 2;
-    $config->{ 'TODOTXT_AUTO_ARCHIVE' } = defined $auto_archive
-	? ( $auto_archive eq 'a' ? 0 : 1 ) : 1;
+    $config->{ 'TODOTXT_AUTO_ARCHIVE' } = defined $auto_archive_opt
+	? ( $auto_archive_opt eq 'a' ? 0 : 1 ) : 1;
+    $config->{ 'TODOTXT_PLAIN' } = defined $txt_plain_opt
+	? ( $txt_plain_opt eq 'c' ? 0 : 1 ) : 0;
+    $config->{ 'TODOTXT_DATE_ON_ADD' } = defined $date_on_add_opt
+	? ( $date_on_add_opt eq 't' ? 1 : 0 ) : 0;
 }
 
 sub default_config {
@@ -140,8 +148,8 @@ Provides a default color scheme.
     get_options(\%opts, \%cl_opts_config);
 
 A wrapper around Getopt::Std::getopts. Sets up %opts by a call to
-getopts(\%opts). Checks a, A, p, P, @ and + options and fills %cl_opts_config 
-accordingly.
+getopts(\%opts). Checks a, A, p, P, t, T, @ and + options and fills 
+%cl_opts_config accordingly.
 
 =head2 make_config
 

@@ -90,27 +90,17 @@ sub setup {
     Text::Todo::Config::get_options(\%opts, \%opts_config);
 }
 
-setup qw( -p );
-is_deeply(\%opts_config,
-	  {
-	      TODOTXT_PLAIN        => 1,
-	      HIDE_PRIORITY        => 0,
-	      HIDE_CONTEXT         => 0,
-	      HIDE_PROJECT         => 0,
-	      TODOTXT_AUTO_ARCHIVE => 1,
-	  },
-	  'get_options - -p option present');
-
 setup ();
 is_deeply(\%opts_config,
 	  {
-	      TODOTXT_PLAIN        => '',
+	      TODOTXT_PLAIN        => 0,
 	      HIDE_PRIORITY        => 0,
 	      HIDE_CONTEXT         => 0,
 	      HIDE_PROJECT         => 0,
 	      TODOTXT_AUTO_ARCHIVE => 1,
+	      TODOTXT_DATE_ON_ADD  => 0,
 	  },
-	  'get_options - -p option missing');
+	  'get_options - option defaults');
 
 setup qw( -+ -+ -- -+ );
 is( $opts_config{ HIDE_CONTEXT }, 0, 'get_options - processing stops at --' );
@@ -138,17 +128,38 @@ is( $opts_config{ TODOTXT_AUTO_ARCHIVE },
     1,
     'get_options - switching a and A options: -A is final' );
 
+setup qw( -cp -c -dP/todo.cfg list );
+is( $opts_config{ TODOTXT_PLAIN },
+    0,
+    'get_options - switching c and p options: -c is final' );
+
+setup qw( -cp -dP/todo.cfg list );
+is( $opts_config{ TODOTXT_PLAIN },
+    1,
+    'get_options - switching c and p options: -p is final' );
+
+setup qw( -tT -t -dP/todo.cfg list );
+is( $opts_config{ TODOTXT_DATE_ON_ADD },
+    1,
+    'get_options - switching t and T options: -t is final' );
+
+setup qw( -tT -dP/todo.cfg list );
+is( $opts_config{ TODOTXT_DATE_ON_ADD },
+    0,
+    'get_options - switching t and T options: -T is final' );
+
 setup qw( -dt/todo.cfg  --- -P ls );
 is( $opts{ P }, 1, 'get_options - three dashes pass' );
 
 setup qw( -P@@+++ -P -P  -PP );
 is_deeply(\%opts_config,
 	  {
-	      TODOTXT_PLAIN        => '',
+	      TODOTXT_PLAIN        => 0,
 	      HIDE_PRIORITY        => 1,
 	      HIDE_CONTEXT         => 0,
 	      HIDE_PROJECT         => 1,
 	      TODOTXT_AUTO_ARCHIVE => 1,
+	      TODOTXT_DATE_ON_ADD  => 0,
 	  },
 	  'get_options - switching P, + and @ options');
 
