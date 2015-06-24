@@ -360,11 +360,11 @@ use version; our $VERSION = qv('0.2.2');
             return;
         }
 
-        my $changed = 0;
+	my @moved;
     ENTRY: foreach my $e ( $self->list ) {
             if ( $e->done ) {
                 if ( $self->addto( 'done_file', $e ) && $self->del($e) ) {
-                    $changed++;
+		    push @moved, $e;
                 }
                 else {
                     carp q{Couldn't archive entry [} . $e->text . ']';
@@ -373,7 +373,7 @@ use version; our $VERSION = qv('0.2.2');
             }
             elsif ( $e->text eq q{} ) {
                 if ( $self->del($e) ) {
-                    $changed++;
+		    push @moved, $e;
                 }
                 else {
                     carp q{Couldn't delete blank entry};
@@ -382,11 +382,9 @@ use version; our $VERSION = qv('0.2.2');
             }
         }
 
-        if ($changed) {
-            $self->save;
-        }
+	$self->save if @moved;
 
-        return $changed;
+	return wantarray ? @moved : \@moved;
     }
 
     sub addto {

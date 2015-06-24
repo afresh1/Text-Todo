@@ -40,12 +40,14 @@ my $properties = {
 };
 
 my $options = {
-    TODOTXT_AUTO_ARCHIVE => 1,
-    TODOTXT_PLAIN        => 0,
-    TODOTXT_DATE_ON_ADD  => 0,
-    HIDE_PRIORITY        => 0,
-    HIDE_CONTEXT         => 0,
-    HIDE_PROJECT         => 0,
+    TODOTXT_FORCE                 => 0,
+    TODOTXT_PRESERVE_LINE_NUMBERS => 1,
+    TODOTXT_AUTO_ARCHIVE          => 1,
+    TODOTXT_PLAIN                 => 0,
+    TODOTXT_DATE_ON_ADD           => 0,
+    HIDE_PRIORITY                 => 0,
+    HIDE_CONTEXT                  => 0,
+    HIDE_PROJECT                  => 0,
 };
 
 my $merge = sub {
@@ -64,7 +66,8 @@ sub get_options {
     my ($opts, $config) = @_;
 
     my ( $priority, $context, $project,
-	 $auto_archive_opt, $txt_plain_opt, $date_on_add_opt );
+	 $auto_archive_opt, $txt_plain_opt, $date_on_add_opt,
+	 $preserve_line_number_opt, $force_opt );
 
     # make sure three or more dashes pass as in todo.sh
     @ARGV = map { /^---+$/ ? () : $_ } @ARGV;
@@ -80,23 +83,23 @@ sub get_options {
     my $previous = '';
     for ( @args ) {
 	# the first non-option should not be preceded by a -d
-	last if /^[^-]/ && $previous !~ /^-+[+cfhpPntTvV\@aA]*d$/;
+	last if /^[^-]/ && $previous !~ /^-+[+cfhpPnNtTvV\@aA]*d$/;
 	$priority += () = /P/g;
 	$context += () = /@/g;
 	$project += () = /\+/g;
 
 	my $reversed = scalar reverse;
-	$reversed =~ /(a|A)/;
-	$auto_archive_opt = $1;
-	$reversed =~ /(c|p)/;
-	$txt_plain_opt = $1;
-	$reversed =~ /(t|T)/;
-	$date_on_add_opt = $1;
+	
+	$auto_archive_opt = $1 if $reversed =~ /(a|A)/;
+	$txt_plain_opt = $1 if $reversed =~ /(c|p)/;
+	$date_on_add_opt = $1 if $reversed =~ /(t|T)/;
+	$preserve_line_number_opt = $1 if $reversed =~ /(n|N)/;
+	$force_opt = $1 if /(f)/;
 	    
 	$previous = $_;
     }
 
-    Getopt::Std::getopts( q{+d:cfhpPntTvV@aA}, $opts );
+    Getopt::Std::getopts( q{+d:cfhpPnNtTvV@aA}, $opts );
     $config->{ 'HIDE_PRIORITY' } = $priority % 2 if defined $priority;
     $config->{ 'HIDE_CONTEXT' } = $context % 2 if defined $context;
     $config->{ 'HIDE_PROJECT' } = $project % 2 if defined $project;
@@ -109,6 +112,13 @@ sub get_options {
     }
     if ( defined $date_on_add_opt ) {
 	$config->{TODOTXT_DATE_ON_ADD} = $date_on_add_opt eq 't' ? 1 : 0;
+    }
+    if ( defined $preserve_line_number_opt ) {
+	$config->{TODOTXT_PRESERVE_LINE_NUMBERS} =
+	    $preserve_line_number_opt eq 'n' ? 0 : 1;
+    }
+    if ( defined $force_opt ) {
+	$config->{TODOTXT_FORCE} = $force_opt eq 'f' ? 1 : 0;
     }
 }
 

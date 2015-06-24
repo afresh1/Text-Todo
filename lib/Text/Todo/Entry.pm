@@ -25,8 +25,13 @@ use version; our $VERSION = qv('0.2.1');
     my $priority_completion_regex = qr{
         ^ \s*
         (?i:(x \s* [\d-]* ) \s*)?
-        (?i:\( ([A-Z]) \)   \s*)?
+        (?:\( ([A-Z]) \)   \s+)?
     }xms;
+
+    my $time = sub { sprintf "%04d-%02d-%02d",
+		 ( (localtime)[5] + 1900 ),
+		 ( (localtime)[4] + 1 ),
+		 ( (localtime)[3] ) };
 
     sub new {
         my ( $class, $options ) = @_;
@@ -202,7 +207,13 @@ use version; our $VERSION = qv('0.2.1');
         }
 
         if ( defined $addition && length $addition ) {
-            push @new, $addition;
+	    # without the following conditional client-prepend.t doesn't pass
+	    my $date_regex = qr/^(\d\d\d\d-\d\d-\d\d )/;
+	    if ( $new !~ /$date_regex/ ) {
+		push @new, $addition;
+	    } else {
+		$new =~ s/$date_regex/$1$addition /;
+	    }
         }
 
         return $self->replace( join q{ }, @new, $new );
@@ -210,8 +221,14 @@ use version; our $VERSION = qv('0.2.1');
 
     sub append {
         my ( $self, $addition ) = @_;
-        return $self->replace( join q{ }, $self->text, $addition );
+	my $delimiters = ( $ENV{SENTENCE_DELIMITERS}
+			   ? $ENV{SENTENCE_DELIMITERS} : ',.:;' );
+	$delimiters = qr/^[$delimiters]/;
+	my $link = $addition =~ /$delimiters/ ? q{} : q{ };
+        return $self->replace( join $link, $self->text, $addition );
     }
+
+    sub _set_time { $time = $_[1]; }
 
     ## no critic 'homonym'
     sub do {    # This is what it is called in todo.sh
@@ -223,10 +240,7 @@ use version; our $VERSION = qv('0.2.1');
             return 1;
         }
 
-        $completion_status_of{$ident} = sprintf "%04d-%02d-%02d",
-            ( (localtime)[5] + 1900 ),
-            ( (localtime)[4] + 1 ),
-            ( (localtime)[3] );
+        $completion_status_of{$ident} = $time->();
 
         return $self->prepend();
     }

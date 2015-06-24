@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 # $AFresh1: todo.pl,v 1.21 2010/02/03 18:14:01 andrew Exp $
 ########################################################################
-# todo.pl *** a perl version of todo.sh. Uses Text::Todo.
+# todo.pl *** a perl version of todo.sh. Uses Text::Todo:: modules.
 #
 # 2010.01.07 #*#*# andrew fresh <andrew@cpan.org>
 ########################################################################
@@ -13,10 +13,10 @@
 use strict;
 use warnings;
 
-use Text::Todo;
 use Text::Todo::Addon;
 use Text::Todo::Config;
 use Text::Todo::Help;
+use Text::Todo::Client;
 
 use version; our $VERSION = qv('0.1.2');
 
@@ -28,31 +28,6 @@ CONFIG: foreach my $f ( $config_file, $ENV{HOME} . '/.todo.cfg', ) {
         last CONFIG;
     }
 }
-
-my %actions = (
-    add        => \&add,
-    addto      => \&addto,
-    append     => \&append,
-    archive    => \&archive,
-    command    => \&command,
-    del        => \&del,
-    depri      => \&depri,
-    do         => \&mark_done,
-    help       => \&help,
-    list       => \&list,
-    listaddons => \&listaddons,
-    listall    => \&listall,
-    listcon    => \&listcon,
-    listfile   => \&listfile,
-    listpri    => \&listpri,
-    listproj   => \&listproj,
-    move       => \&move,
-    prepend    => \&prepend,
-    pri        => \&pri,
-    replace    => \&replace,
-    report     => \&report,
-    shorthelp  => \&shorthelp,
-);
 
 my %aliases = (
     a     => 'add',
@@ -113,383 +88,21 @@ if ( $action && exists $aliases{$action} ) {
     $action = $aliases{$action};
 }
 
-my @unsupported = grep { defined $opts{$_} } qw( f v V );
+my @unsupported = grep { defined $opts{$_} } qw( v V );
 if (@unsupported) {
     warn 'Unsupported options: ' . ( join q{, }, @unsupported ) . "\n";
 }
 
-if ( exists $actions{$action} ) {
-    my $result = $actions{$action}->( $config, @ARGV );
+if ( $action ) {
+    my $client = Text::Todo::Client->new( config => $config );
+
+    if ( $client->can( $action ) ) {
+	$client->$action( @ARGV );
+    }
 }
 else {
     Text::Todo::Help::usage();
 }
-
-sub _date {
-    use Time::localtime;
-
-    my $year = localtime->year() + 1900;
-    my $month = localtime->mon() + 1;
-    my $day = localtime->mday();
-
-    return sprintf( "%d-%02d-%02d", $year, $month, $day );
-}
-
-sub add {
-    my ( $config, @entry ) = @_;
-    if ( !@entry ) {
-        die "usage: todo.pl add 'item'\n";
-    }
-
-    unshift( @entry, _date() ) if $config->{ lc 'TODOTXT_DATE_ON_ADD' };
-    my $entry = join q{ }, @entry;
-
-    my $todo = Text::Todo->new($config);
-    if ( $todo->add($entry) && $todo->save ) {
-        my @list  = $todo->list;
-        my $lines = scalar @list;
-
-        print "TODO: '$entry' added on line $lines\n";
-
-        return $lines;
-    }
-    die "Unable to add [$entry]\n";
-}
-
-sub addto {
-    my ( $config, $file, @entry ) = @_;
-    if ( !( $file && @entry ) ) {
-        die "usage: todo.pl addto DEST 'TODO ITEM'\n";
-    }
-
-    unshift ( @entry, _date() ) if $config->{ lc 'TODOTXT_DATE_ON_ADD' };
-    my $entry = join q{ }, @entry;
-
-    my $todo = Text::Todo->new($config);
-
-    $file = $todo->file($file);
-    if ( $todo->addto( $file, $entry ) ) {
-        my @list  = $todo->listfile($file);
-        my $lines = scalar @list;
-
-        print "TODO: '$entry' added to $file on line $lines\n";
-
-        return $lines;
-    }
-    die "Unable to add [$entry]\n";
-}
-
-sub append {
-    my ( $config, $line, @text ) = @_;
-    if ( !( $line && @text && $line =~ /^\d+$/xms ) ) {
-        die 'usage: todo.pl append ITEM# "TEXT TO APPEND"' . "\n";
-    }
-
-    my $text = join q{ }, @text;
-
-    my $todo  = Text::Todo->new($config);
-    my $entry = $todo->list->[ $line - 1 ];
-
-    if ( $entry->append($text) && $todo->save ) {
-        return printf "%02d: %s\n", $line, $entry->text;
-    }
-    die "Unable to append\n";
-}
-
-sub archive {
-    my ($config) = @_;
-    my $todo = Text::Todo->new($config);
-
-    my $file = $todo->file;
-
-    my $archived = $todo->archive;
-    if ( defined $archived ) {
-        return print "TODO: $file archived.\n";
-    }
-    die "Unable to archive $file\n";
-}
-
-## no critic 'sigal'
-sub command { return &unsupported }
-## use critic
-
-sub del {
-    my ( $config, $line ) = @_;
-    if ( !( $line && $line =~ /^\d+$/xms ) ) {
-        die 'usage: todo.pl del ITEM#' . "\n";
-    }
-    my $todo = Text::Todo->new($config);
-
-    my $entry = $todo->list->[ $line - 1 ];
-    print 'Delete \'', $entry->text . "'?  (y/n)\n";
-    warn "XXX No delete confirmation currently!\n";
-
-    if ( $opts{n} ) {
-        if ( $todo->del($entry) && $todo->save ) {
-            return print 'TODO: \'', $entry->text, "' deleted.\n";
-        }
-    }
-    else {
-        my $text = $entry->text;
-        if ( $entry->replace(q{}) && $todo->save ) {
-            return print 'TODO: \'', $text, "' deleted.\n";
-        }
-    }
-
-    die "Unable to delete entry\n";
-}
-
-sub depri {
-    my ( $config, $line ) = @_;
-    if ( !( $line && $line =~ /^\d+$/xms ) ) {
-        die 'usage: todo.pl depri ITEM#' . "\n";
-    }
-    my $todo = Text::Todo->new($config);
-
-    my $entry = $todo->list->[ $line - 1 ];
-    if ( $entry->depri && $todo->save ) {
-        return print $line, ': ', $entry->text, "\n",
-            'TODO: ', $line, " deprioritized.\n";
-    }
-    die "Unable to deprioritize entry\n";
-}
-
-# since "do" is reserved
-sub mark_done {
-    my ( $config, $line ) = @_;
-    if ( !( $line && $line =~ /^\d+$/xms ) ) {
-        die 'usage: todo.pl del ITEM#' . "\n";
-    }
-    my $todo = Text::Todo->new($config);
-
-    my $entry = $todo->list->[ $line - 1 ];
-
-    if ( $entry->do && $todo->save ) {
-        my $status = print $line, ': ', $entry->text, "\n",
-            'TODO: ', $line, " marked as done.\n";
-
-	if ( $config->{ lc 'TODOTXT_AUTO_ARCHIVE' } ) {
-	    return archive( $config );
-	}
-        return $status;
-    }
-    die "Unable to mark as done\n";
-}
-
-sub help {
-    my ($config, @action_names) = @_;
-
-    if ( @action_names ) {
-	for my $an ( @action_names ) {
-	    my $addon = Text::Todo::Addon::for_name( $config, $an );
-	    if ( $addon ) {
-		$addon->( 'usage' );
-	    } elsif ( exists $actions{ $an } ) {
-		my $ah = Text::Todo::Help::action_help( $an );
-		print "$$ah\n";
-	    } else {
-		die "TODO: No action \"${an}\" exists.\n";
-	    }
-	}
-	return;
-    }
-
-    # use a pager if one is available
-    if (-t STDOUT) {
-	my $pager = $ENV{PAGER} || "less";
-	if ( system( "which $pager >/dev/null 2>&1" ) == 0 ) {
-	    open(STDOUT, "| $pager");
-	}
-    }
-
-    Text::Todo::Help::options_help();
-    my $ah = Text::Todo::Help::action_help();
-    print "$$ah";
-
-    my $addons = {};
-    Text::Todo::Addon::get_all( $config, $addons );
-    if ( $addons ) {
-    	print "  Add-on Actions:\n";
-    	$addons->{ $_ }->( 'usage' ) for sort keys %$addons;
-    }	
-    close STDOUT;
-}
-
-sub list {
-    my ( $config, $term ) = @_;
-    my $todo = Text::Todo->new($config);
-
-    my @list = _number_list( $todo->list );
-    my $shown = _show_sorted_list( $term, $config, @list );
-
-    return _show_list_footer( $shown, scalar @list, $config->{todo_file} );
-}
-
-sub listaddons {
-    my ($config) = @_;
-    my $addons = {};
-    Text::Todo::Addon::get_all( $config, $addons );
-    if ( $addons ) {
-	print "$_\n" for sort keys %$addons;
-    }
-}
-
-sub listall {
-    my ( $config, $term ) = @_;
-    my $todo = Text::Todo->new($config);
-
-    my @list = _number_list(
-        $todo->listfile('todo_file'),
-        $todo->listfile('done_file'),
-    );
-    my $shown = _show_sorted_list( $term, $config, @list );
-
-    return _show_list_footer( $shown, scalar @list, $config->{'todo_dir'} );
-}
-
-sub listcon {
-    my ($config) = @_;
-    my $todo = Text::Todo->new($config);
-    return print map {"\@$_\n"} $todo->listcon;
-}
-
-sub listfile {
-    my ( $config, $file, $term ) = @_;
-    if ( !$file ) {
-        die "usage: todo.pl listfile SRC [TERM]\n";
-    }
-    my $todo = Text::Todo->new($config);
-
-    my @list = _number_list( $todo->listfile($file) );
-    my $shown = _show_sorted_list( $term, $config, @list );
-
-    return _show_list_footer( $shown, scalar @list, $file );
-}
-
-sub listpri {
-    my ( $config, $pri ) = @_;
-
-    my $todo = Text::Todo->new($config);
-
-    my @list = _number_list( $todo->listfile('todo_file') );
-    my @pri_list;
-    if ($pri) {
-        $pri = uc $pri;
-        if ( $pri !~ /^[[:upper:]]$/xms ) {
-            die "usage: todo.pl listpri PRIORITY\n",
-                "note: PRIORITY must a single letter from A to Z.\n";
-        }
-        @pri_list = grep {
-            defined $_->{entry}->priority
-                && $_->{entry}->priority eq $pri
-        } @list;
-    }
-    else {
-        @pri_list = grep { $_->{entry}->priority } @list;
-    }
-
-    my $shown = _show_sorted_list( undef, $config, @pri_list );
-
-    return _show_list_footer( $shown, scalar @list, $config->{todo_file} );
-}
-
-sub listproj {
-    my ($config) = @_;
-    my $todo = Text::Todo->new($config);
-    return print map {"\+$_\n"} $todo->listproj;
-}
-
-## no critic 'sigal'
-sub move { return &unsupported }
-## use critic
-
-sub prepend {
-    my ( $config, $line, @text ) = @_;
-    if ( !( $line && @text && $line =~ /^\d+$/xms ) ) {
-        die 'usage: todo.pl prepend ITEM# "TEXT TO PREPEND"' . "\n";
-    }
-
-    my $text = join q{ }, @text;
-
-    my $todo  = Text::Todo->new($config);
-    my $entry = $todo->list->[ $line - 1 ];
-
-    if ( $entry->prepend($text) && $todo->save ) {
-        return printf "%02d: %s\n", $line, $entry->text;
-    }
-    die "Unable to prepend\n";
-}
-
-sub pri {
-    my ( $config, $line, $priority ) = @_;
-    my $error = 'usage: todo.pl pri ITEM# PRIORITY';
-    if ( !( $line && $line =~ /^\d+$/xms && $priority ) ) {
-        die "$error\n";
-    }
-    elsif ( $priority !~ /^[[:upper:]]$/xms ) {
-        $error .= "\n" . 'note: PRIORITY must a single letter from A to Z.';
-        die "$error\n";
-    }
-
-    my $todo = Text::Todo->new($config);
-
-    my $entry = $todo->list->[ $line - 1 ];
-    if ( $entry->pri($priority) && $todo->save ) {
-        return print $line, ': ', $entry->text, "\n",
-            'TODO: ', $line, ' prioritized (', $entry->priority, ").\n";
-    }
-    die "Unable to prioritize entry\n";
-}
-
-sub shorthelp {
-    Text::Todo::Help::usage(1);
-}
-
-## no critic 'sigal'
-sub replace { return &unsupported }
-sub report  { return &unsupported }
-## use critic
-
-sub _number_list {
-    my (@list) = @_;
-
-    my $line = 1;
-    return map { { line => $line++, entry => $_, } } @list;
-}
-
-sub _show_sorted_list {
-    my ( $term, $config, @list ) = @_;
-    $term = defined $term ? quotemeta($term) : q{};
-
-    my $shown = 0;
-    my @sorted = map { sprintf '%02d %s', $_->{line}, $_->{entry}->text }
-        sort { lc $a->{entry}->text cmp lc $b->{entry}->text } @list;
-
-    use Text::Todo::Filter;
-    my $filter = Text::Todo::Filter::make_filter( $config );
-    
-    foreach my $line ( grep {/$term/xms} @sorted ) {
-	print $filter->( $line ), "\n";
-
-	$shown++;
-    }
-
-    return $shown;
-}
-
-sub _show_list_footer {
-    my ( $shown, $total, $file ) = @_;
-
-    $shown ||= 0;
-    $total ||= 0;
-
-    print "-- \n";
-    print "TODO: $shown of $total tasks shown from $file\n";
-
-    return 1;
-}
-
-sub unsupported { die "Unsupported action\n" }
 
 
 __END__
