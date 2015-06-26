@@ -149,6 +149,36 @@ sub _getch {
     return $key;
 }
 
+sub deduplicate {
+    my $self = shift;
+
+    my @entries = $self->todo->list;
+    my $cnt = 0;
+    while ( my $entry = shift @entries ) {
+	next if $entry->text =~ /^$/;
+	for my $e ( @entries ) {
+	    if ( $e->text eq $entry->text ) {
+		if ( $self->config->{ lc 'TODOTXT_PRESERVE_LINE_NUMBERS' } ) {
+		    $e->replace( q{} );
+		    $cnt++;
+		} else {
+		    $self->todo->del( $e ) or die "Unable to delete entry\n";
+		    $cnt++;
+		}
+	    }
+	}
+    }
+    my $prefix = $self->_get_prefix;
+
+    return $self->log->( "$prefix: No duplicate tasks found\n" ) unless $cnt;
+
+    if ( $self->todo->save ) {
+	return $self->log->( "$prefix: $cnt duplicate task(s) removed\n" );
+    }
+
+    die "Unable to deduplicate entries\n";
+}
+
 sub del {
     my ( $self, $line, $term ) = @_;
     if ( !( $line && $line =~ /^\d+$/xms ) ) {
