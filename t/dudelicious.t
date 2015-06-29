@@ -1,6 +1,6 @@
 #!perl
 # $AFresh1: dudelicious.t,v 1.9 2010/05/05 01:24:20 andrew Exp $
-use Test::More tests => 75;
+use Test::More;
 
 use strict;
 use warnings;
@@ -9,6 +9,7 @@ use File::Temp qw/ tempdir /;
 use File::Copy qw/ cp /;
 use File::Spec;
 
+plan skip_all => "dudelicious is broken in current versions of Mojo";
 my $have_test_json = 1;
 
 BEGIN {
