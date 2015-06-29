@@ -21,7 +21,7 @@ use Mojo::JSON;
 
 app->home->parse( $ENV{DUDELICIOUS_HOME} ) if $ENV{DUDELICIOUS_HOME};
 
-plugin 'json_config' => {
+plugin 'config' => {
     file    => 'dudelicious.conf',
     default => { todo_dir => $ENV{DUDELICIOUS_HOME} || '.', },
 };
