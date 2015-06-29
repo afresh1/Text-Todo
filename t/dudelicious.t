@@ -16,10 +16,12 @@ BEGIN {
     plan skip_all => "Test::Mojo required for testing dudelicious" if $@;
 }
 
+use Mojo::JSON qw( decode_json );
+
 my $todo_dir = tempdir( 'todo-XXXXXXXXX', CLEANUP => 1, TMPDIR => 1 );
 $ENV{DUDELICIOUS_HOME} = $todo_dir;
 
-foreach my $file qw( todo1.txt todo.list.txt dudelicious.conf ) {
+foreach my $file (qw( todo1.txt todo.list.txt dudelicious.conf )) {
     cp( File::Spec->catfile( 't',       $file ),
         File::Spec->catfile( $todo_dir, $file ),
     ) || die "Couldn't cp [$todo_dir]/[$file]: $!";
