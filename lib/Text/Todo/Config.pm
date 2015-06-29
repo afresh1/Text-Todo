@@ -39,6 +39,15 @@ my $properties = {
 	COLOR_DONE    => 'LIGHT_GREY',
 };
 
+my $options = {
+    TODOTXT_AUTO_ARCHIVE => 1,
+    TODOTXT_PLAIN        => 0,
+    TODOTXT_DATE_ON_ADD  => 0,
+    HIDE_PRIORITY        => 0,
+    HIDE_CONTEXT         => 0,
+    HIDE_PROJECT         => 0,
+};
+
 my $merge = sub {
     my $dest = shift;
 
@@ -54,8 +63,8 @@ my $merge = sub {
 sub get_options {
     my ($opts, $config) = @_;
 
-    my ( $priority, $context, $project ) = ( 0, 0, 0 );
-    my ( $auto_archive_opt, $txt_plain_opt, $date_on_add_opt );
+    my ( $priority, $context, $project,
+	 $auto_archive_opt, $txt_plain_opt, $date_on_add_opt );
 
     # make sure three or more dashes pass as in todo.sh
     @ARGV = map { /^---+$/ ? () : $_ } @ARGV;
@@ -88,20 +97,32 @@ sub get_options {
     }
 
     Getopt::Std::getopts( q{+d:cfhpPntTvV@aA}, $opts );
-    $config->{ 'HIDE_PRIORITY' } = $priority % 2;
-    $config->{ 'HIDE_CONTEXT' } = $context % 2;
-    $config->{ 'HIDE_PROJECT' } = $project % 2;
-    $config->{ 'TODOTXT_AUTO_ARCHIVE' } = defined $auto_archive_opt
-	? ( $auto_archive_opt eq 'a' ? 0 : 1 ) : 1;
-    $config->{ 'TODOTXT_PLAIN' } = defined $txt_plain_opt
-	? ( $txt_plain_opt eq 'c' ? 0 : 1 ) : 0;
-    $config->{ 'TODOTXT_DATE_ON_ADD' } = defined $date_on_add_opt
-	? ( $date_on_add_opt eq 't' ? 1 : 0 ) : 0;
+    $config->{ 'HIDE_PRIORITY' } = $priority % 2 if defined $priority;
+    $config->{ 'HIDE_CONTEXT' } = $context % 2 if defined $context;
+    $config->{ 'HIDE_PROJECT' } = $project % 2 if defined $project;
+
+    if ( defined $auto_archive_opt ) {
+	$config->{TODOTXT_AUTO_ARCHIVE} = $auto_archive_opt eq 'a' ? 0 : 1;
+    }
+    if ( defined $txt_plain_opt ) {
+	$config->{TODOTXT_PLAIN} = $txt_plain_opt eq 'c' ? 0 : 1;
+    }
+    if ( defined $date_on_add_opt ) {
+	$config->{TODOTXT_DATE_ON_ADD} = $date_on_add_opt eq 't' ? 1 : 0;
+    }
 }
 
 sub default_config {
     my %cf;
-    return $merge->( \%cf, $colors, $properties );
+    return $merge->( \%cf, $colors, $properties, $options );
+}
+
+sub env_config {
+    my %config;
+    for my $k ( keys %$options ) {
+	$config{ $k } = $ENV{$k} if exists $ENV{$k} && defined $ENV{$k};
+    }
+    return \%config;
 }
 
 sub make_config {
@@ -112,6 +133,48 @@ sub make_config {
     while ( my ($k, $v) = each %dest ) {
 	$config{lc $k} = $v;
     }
+    return \%config;
+}
+
+my $parse_line = sub {
+    my ( $line, $config ) = @_;
+
+    $line =~ s/\r?\n$//xms;
+    $line =~ s/\s*\#.*$//xms;
+    return if !$line;
+
+    if ($line =~ s/^\s*export\s+//xms) {
+        my ( $key, $value ) = $line =~ /^([^=]+)\s*=\s*"?(.*?)"?\s*$/xms;
+        if ($key) {
+            foreach my $k ( keys %{ $config } ) {
+                $value =~ s/\$\Q$k\E/$config->{$k}/gxms;
+                $value =~ s/\${\Q$k\E}/$config->{$k}/gxms;
+            }
+            foreach my $k ( keys %ENV ) {
+                $value =~ s/\$\Q$k\E/$ENV{$k}/gxms;
+                $value =~ s/\${\Q$k\E}/$ENV{$k}/gxms;
+            }
+            $value =~ s/\$\w+//gxms;
+            $value =~ s/\${\w+}//gxms;
+
+            $config->{$key} = $value;
+        }
+    }
+
+    return 1;
+};
+
+sub read_config {
+    my ($file) = @_;
+
+    my %config;
+
+    open my $fh, '<', $file or die "Unable to open [$file] : $!\n";
+LINE: while (<$fh>) {
+        $parse_line->( $_, \%config );
+    }
+    close $fh or die "Unable to close [$file]: $!\n";
+
     return \%config;
 }
 
@@ -141,7 +204,7 @@ code.
 
     $config = default_config();
 
-Provides a default color scheme.
+Provides a default color scheme and options.
 
 =head2 get_options
 
@@ -158,4 +221,18 @@ getopts(\%opts). Checks a, A, p, P, t, T, @ and + options and fills
 Combines one or more hashrefs in a single one with lowercased keys. See the 
 synopsis. Values matching keys in preceding hashes are replaced by those keys' 
 corresponding values.
-    
+
+=head2 env_config
+
+    env_config()
+
+Puts together the values of env variables that match certain options. Must be 
+used in making a config to handle the possibility of an addon calling back the 
+client.
+
+=head2 read_config
+
+    read_config($file);
+
+Reads a todo.cfg configuration file. Return a hashref of the env variables that
+are exported by todo.sh. 

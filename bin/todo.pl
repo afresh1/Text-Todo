@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 # $AFresh1: todo.pl,v 1.21 2010/02/03 18:14:01 andrew Exp $
 ########################################################################
 # todo.pl *** a perl version of todo.sh. Uses Text::Todo.
@@ -14,7 +14,9 @@ use strict;
 use warnings;
 
 use Text::Todo;
+use Text::Todo::Addon;
 use Text::Todo::Config;
+use Text::Todo::Help;
 
 use version; our $VERSION = qv('0.1.2');
 
@@ -28,26 +30,28 @@ CONFIG: foreach my $f ( $config_file, $ENV{HOME} . '/.todo.cfg', ) {
 }
 
 my %actions = (
-    add      => \&add,
-    addto    => \&addto,
-    append   => \&append,
-    archive  => \&archive,
-    command  => \&command,
-    del      => \&del,
-    depri    => \&depri,
-    do       => \&mark_done,
-    help     => \&help,
-    list     => \&list,
-    listall  => \&listall,
-    listcon  => \&listcon,
-    listfile => \&listfile,
-    listpri  => \&listpri,
-    listproj => \&listproj,
-    move     => \&move,
-    prepend  => \&prepend,
-    pri      => \&pri,
-    replace  => \&replace,
-    report   => \&report,
+    add        => \&add,
+    addto      => \&addto,
+    append     => \&append,
+    archive    => \&archive,
+    command    => \&command,
+    del        => \&del,
+    depri      => \&depri,
+    do         => \&mark_done,
+    help       => \&help,
+    list       => \&list,
+    listaddons => \&listaddons,
+    listall    => \&listall,
+    listcon    => \&listcon,
+    listfile   => \&listfile,
+    listpri    => \&listpri,
+    listproj   => \&listproj,
+    move       => \&move,
+    prepend    => \&prepend,
+    pri        => \&pri,
+    replace    => \&replace,
+    report     => \&report,
+    shorthelp  => \&shorthelp,
 );
 
 my %aliases = (
@@ -69,39 +73,56 @@ my %aliases = (
 my (%opts, %cl_opts_config);
 Text::Todo::Config::get_options(\%opts, \%cl_opts_config);
 
-my $action = shift @ARGV;
-if ( $action && $action eq 'command' ) {
-
-    # We don't support action scripts so . . .
-    $action = shift @ARGV;
-}
-if ( $action && exists $aliases{$action} ) {
-    $action = $aliases{$action};
-}
-
-if ( $opts{h} || !$action ) {
-    usage( $opts{h} );
-}
-
-my @unsupported = grep { defined $opts{$_} } qw( f h v V );
-if (@unsupported) {
-    warn 'Unsupported options: ' . ( join q{, }, @unsupported ) . "\n";
-}
-
 if ( $opts{d} ) {
     $config_file = $opts{d};
 }
 
+Text::Todo::Help::usage( $opts{h} ) if $opts{h};
+
+my $action = shift @ARGV;
+
+Text::Todo::Help::usage( $opts{h} ) unless $action;
+
+my $config = Text::Todo::Config::make_config(
+    Text::Todo::Config::default_config(),
+    Text::Todo::Config::read_config($config_file),
+    Text::Todo::Config::env_config(),
+    \%cl_opts_config
+    );
+
+if ( $action ne 'command' ) {
+    my $addon = Text::Todo::Addon::for_name( $config, $action );
+    if ( $addon ) {
+	use Cwd 'abs_path';
+	use File::Basename;
+	$ENV{ uc $_ } = $config->{ $_ } for keys %$config;
+	$ENV{TODO_FULL_SH} = abs_path($0);
+	$ENV{TODO_SH} = basename($0);
+	$ENV{TODOTXT_CFG_FILE} = $config_file;
+	$addon->( $action, @ARGV );
+
+	exit $?;
+    }
+}
+
+if ( $action eq 'command' ) {
+    $action = shift @ARGV;
+}
+
+if ( $action && exists $aliases{$action} ) {
+    $action = $aliases{$action};
+}
+
+my @unsupported = grep { defined $opts{$_} } qw( f v V );
+if (@unsupported) {
+    warn 'Unsupported options: ' . ( join q{, }, @unsupported ) . "\n";
+}
+
 if ( exists $actions{$action} ) {
-    my $config = Text::Todo::Config::make_config(
-	Text::Todo::Config::default_config(),
-	read_config($config_file),
-	\%cl_opts_config
-	);
     my $result = $actions{$action}->( $config, @ARGV );
 }
 else {
-    usage();
+    Text::Todo::Help::usage();
 }
 
 sub _date {
@@ -255,9 +276,44 @@ sub mark_done {
     die "Unable to mark as done\n";
 }
 
-## no critic 'sigal'
-sub help { return &unsupported }
-## use critic
+sub help {
+    my ($config, @action_names) = @_;
+
+    if ( @action_names ) {
+	for my $an ( @action_names ) {
+	    my $addon = Text::Todo::Addon::for_name( $config, $an );
+	    if ( $addon ) {
+		$addon->( 'usage' );
+	    } elsif ( exists $actions{ $an } ) {
+		my $ah = Text::Todo::Help::action_help( $an );
+		print "$$ah\n";
+	    } else {
+		die "TODO: No action \"${an}\" exists.\n";
+	    }
+	}
+	return;
+    }
+
+    # use a pager if one is available
+    if (-t STDOUT) {
+	my $pager = $ENV{PAGER} || "less";
+	if ( system( "which $pager >/dev/null 2>&1" ) == 0 ) {
+	    open(STDOUT, "| $pager");
+	}
+    }
+
+    Text::Todo::Help::options_help();
+    my $ah = Text::Todo::Help::action_help();
+    print "$$ah";
+
+    my $addons = {};
+    Text::Todo::Addon::get_all( $config, $addons );
+    if ( $addons ) {
+    	print "  Add-on Actions:\n";
+    	$addons->{ $_ }->( 'usage' ) for sort keys %$addons;
+    }	
+    close STDOUT;
+}
 
 sub list {
     my ( $config, $term ) = @_;
@@ -267,6 +323,15 @@ sub list {
     my $shown = _show_sorted_list( $term, $config, @list );
 
     return _show_list_footer( $shown, scalar @list, $config->{todo_file} );
+}
+
+sub listaddons {
+    my ($config) = @_;
+    my $addons = {};
+    Text::Todo::Addon::get_all( $config, $addons );
+    if ( $addons ) {
+	print "$_\n" for sort keys %$addons;
+    }
 }
 
 sub listall {
@@ -376,6 +441,10 @@ sub pri {
     die "Unable to prioritize entry\n";
 }
 
+sub shorthelp {
+    Text::Todo::Help::usage(1);
+}
+
 ## no critic 'sigal'
 sub replace { return &unsupported }
 sub report  { return &unsupported }
@@ -422,90 +491,6 @@ sub _show_list_footer {
 
 sub unsupported { die "Unsupported action\n" }
 
-sub usage {
-    my ($long) = @_;
-
-    print <<'EOL';
-  * command list taken from todo.sh for compatibility
-  Usage: todo.pl [-fhpantvV] [-d todo_config] action
-EOL
-
-    if ($long) {
-        print <<'EOL';
-
-  Actions:
-    add|a "THING I NEED TO DO +project @context"
-    addto DEST "TEXT TO ADD"
-    append|app NUMBER "TEXT TO APPEND"
-    archive
-    command [ACTIONS]
-    del|rm NUMBER [TERM]
-    dp|depri NUMBER
-    do NUMBER
-    help
-    list|ls [TERM...]
-    listall|lsa [TERM...]
-    listcon|lsc
-    listfile|lf SRC [TERM...]
-    listpri|lsp [PRIORITY]
-    listproj|lsprj
-    move|mv NUMBER DEST [SRC]
-    prepend|prep NUMBER "TEXT TO PREPEND"
-    pri|p NUMBER PRIORITY
-    replace NUMBER "UPDATED TODO"
-    report
-EOL
-    }
-    else {
-        print <<'EOL';
-Try 'todo.pl -h' for more information.
-EOL
-    }
-
-    exit;
-}
-
-sub read_config {
-    my ($file) = @_;
-
-    my %config;
-
-    open my $fh, '<', $file or die "Unable to open [$file] : $!\n";
-LINE: while (<$fh>) {
-        _parse_line( $_, \%config );
-    }
-    close $fh or die "Unable to close [$file]: $!\n";
-
-    return \%config;
-}
-
-sub _parse_line {
-    my ( $line, $config ) = @_;
-
-    $line =~ s/\r?\n$//xms;
-    $line =~ s/\s*\#.*$//xms;
-    return if !$line;
-
-    if ($line =~ s/^\s*export\s+//xms) {
-        my ( $key, $value ) = $line =~ /^([^=]+)\s*=\s*"?(.*?)"?\s*$/xms;
-        if ($key) {
-            foreach my $k ( keys %{ $config } ) {
-                $value =~ s/\$\Q$k\E/$config->{$k}/gxms;
-                $value =~ s/\${\Q$k\E}/$config->{$k}/gxms;
-            }
-            foreach my $k ( keys %ENV ) {
-                $value =~ s/\$\Q$k\E/$ENV{$k}/gxms;
-                $value =~ s/\${\Q$k\E}/$ENV{$k}/gxms;
-            }
-            $value =~ s/\$\w+//gxms;
-            $value =~ s/\${\w+}//gxms;
-
-            $config->{$key} = $value;
-        }
-    }
-
-    return 1;
-}
 
 __END__
 

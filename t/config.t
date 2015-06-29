@@ -9,34 +9,41 @@ use Text::Todo::Config;
 #
 is_deeply(Text::Todo::Config::default_config(),
 	  {
-	      NONE          => '',
-	      BLACK         => "'\\\\033[0;30m'",
-	      RED           => "'\\\\033[0;31m'",
-	      GREEN         => "'\\\\033[0;32m'",
-	      BROWN         => "'\\\\033[0;33m'",
-	      BLUE          => "'\\\\033[0;34m'",
-	      PURPLE        => "'\\\\033[0;35m'",
-	      CYAN          => "'\\\\033[0;36m'",
-	      LIGHT_GREY    => "'\\\\033[0;37m'",
-	      DARK_GREY     => "'\\\\033[1;30m'",
-	      LIGHT_RED     => "'\\\\033[1;31m'",
-	      LIGHT_GREEN   => "'\\\\033[1;32m'",
-	      YELLOW        => "'\\\\033[1;33m'",
-	      LIGHT_BLUE    => "'\\\\033[1;34m'",
-	      LIGHT_PURPLE  => "'\\\\033[1;35m'",
-	      LIGHT_CYAN    => "'\\\\033[1;36m'",
-	      WHITE         => "'\\\\033[1;37m'",
-	      DEFAULT       => "'\\\\033[0m'",
+	      NONE                  => '',
+	      BLACK                 => "'\\\\033[0;30m'",
+	      RED                   => "'\\\\033[0;31m'",
+	      GREEN                 => "'\\\\033[0;32m'",
+	      BROWN                 => "'\\\\033[0;33m'",
+	      BLUE                  => "'\\\\033[0;34m'",
+	      PURPLE                => "'\\\\033[0;35m'",
+	      CYAN                  => "'\\\\033[0;36m'",
+	      LIGHT_GREY            => "'\\\\033[0;37m'",
+	      DARK_GREY             => "'\\\\033[1;30m'",
+	      LIGHT_RED             => "'\\\\033[1;31m'",
+	      LIGHT_GREEN           => "'\\\\033[1;32m'",
+	      YELLOW                => "'\\\\033[1;33m'",
+	      LIGHT_BLUE            => "'\\\\033[1;34m'",
+	      LIGHT_PURPLE          => "'\\\\033[1;35m'",
+	      LIGHT_CYAN            => "'\\\\033[1;36m'",
+	      WHITE                 => "'\\\\033[1;37m'",
+	      DEFAULT               => "'\\\\033[0m'",
 # Default priority->color map.
-	      PRI_A         => "'\\\\033[1;33m'",
-	      PRI_B         => "'\\\\033[0;32m'",
-	      PRI_C         => "'\\\\033[1;34m'",
-	      PRI_X         => "'\\\\033[1;37m'",
+	      PRI_A                 => "'\\\\033[1;33m'",
+	      PRI_B                 => "'\\\\033[0;32m'",
+	      PRI_C                 => "'\\\\033[1;34m'",
+	      PRI_X                 => "'\\\\033[1;37m'",
 # Default project and context colors.
-	      COLOR_PROJECT => '',
-	      COLOR_CONTEXT => '',
+	      COLOR_PROJECT         => '',
+	      COLOR_CONTEXT         => '',
 # Default highlight colors.
-	      COLOR_DONE    => "'\\\\033[0;37m'",
+	      COLOR_DONE            => "'\\\\033[0;37m'",
+# Default options
+  	      TODOTXT_AUTO_ARCHIVE  => 1,
+	      TODOTXT_PLAIN         => 0,
+	      TODOTXT_DATE_ON_ADD   => 0,
+	      HIDE_PRIORITY         => 0,
+	      HIDE_CONTEXT          => 0,
+	      HIDE_PROJECT          => 0,
 	  },
 	  'default_config - value expansion');
 
@@ -78,6 +85,17 @@ is_deeply(Text::Todo::Config::make_config(
 	  },
 	  'make_config - value expansion, keys to lower case');
 
+
+#
+# check env variables capturing
+#
+{
+    local %ENV = ( 'TODOTXT_PLAIN', 1 );
+    is_deeply(Text::Todo::Config::make_config(
+		  Text::Todo::Config::env_config()),
+	      { lc 'TODOTXT_PLAIN' => 1 },
+	      'env_config - env variable captured');
+}
 #
 # check options detection
 #
@@ -93,12 +111,6 @@ sub setup {
 setup ();
 is_deeply(\%opts_config,
 	  {
-	      TODOTXT_PLAIN        => 0,
-	      HIDE_PRIORITY        => 0,
-	      HIDE_CONTEXT         => 0,
-	      HIDE_PROJECT         => 0,
-	      TODOTXT_AUTO_ARCHIVE => 1,
-	      TODOTXT_DATE_ON_ADD  => 0,
 	  },
 	  'get_options - option defaults');
 
@@ -115,7 +127,7 @@ is( $opts_config{ HIDE_PRIORITY },
 
 setup qw( -dP/todo.cfg list );
 is( $opts_config{ HIDE_PRIORITY },
-    0,
+    undef,
     'get_options - chars from bundled paths are not considered options' );
 
 setup qw( -aA -a -dP/todo.cfg list );
@@ -154,12 +166,9 @@ is( $opts{ P }, 1, 'get_options - three dashes pass' );
 setup qw( -P@@+++ -P -P  -PP );
 is_deeply(\%opts_config,
 	  {
-	      TODOTXT_PLAIN        => 0,
 	      HIDE_PRIORITY        => 1,
 	      HIDE_CONTEXT         => 0,
 	      HIDE_PROJECT         => 1,
-	      TODOTXT_AUTO_ARCHIVE => 1,
-	      TODOTXT_DATE_ON_ADD  => 0,
 	  },
 	  'get_options - switching P, + and @ options');
 
