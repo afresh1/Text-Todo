@@ -12,7 +12,9 @@ my $builder = Module::Build->new(
     requires          => {
         'Carp'              => 0,
         'Class::Std::Utils' => 0,
+	'Class::Tiny'       => 0,
         'File::Spec'        => 0,
+	'Try::Tiny'         => 0,
         'version'           => 0,
     },
     build_requires     => {
