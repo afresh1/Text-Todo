@@ -18,7 +18,7 @@ use Test::More tests => 30;
 my $class;
 BEGIN { 
 	$class = 'Text::Todo::Entry';
-	use_ok( $class, "use $class" ) 
+	use_ok( $class );
 }
 
 diag("Testing special tags in $class $Text::Todo::Entry::VERSION");

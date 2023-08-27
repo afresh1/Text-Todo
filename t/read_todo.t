@@ -83,7 +83,7 @@ my %extra_todo = (
     done     => undef,
 );
 
-BEGIN { use_ok( 'Text::Todo', 'use Text::Todo' ) }
+BEGIN { use_ok( 'Text::Todo' ) }
 
 diag("Testing read Text::Todo $Text::Todo::VERSION");
 

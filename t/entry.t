@@ -18,7 +18,7 @@ use Test::More tests => 41;
 my $class;
 BEGIN { 
 	$class = 'Text::Todo::Entry';
-	use_ok( $class, "use $class" ) 
+	use_ok( $class );
 }
 
 diag("Testing entry $class $Text::Todo::Entry::VERSION");

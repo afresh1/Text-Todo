@@ -23,7 +23,7 @@ my $class;
 
 BEGIN {
     $class = 'Text::Todo';
-    use_ok( $class, "use $class" );
+    use_ok( $class );
 }
 
 diag("Testing entry $class $Text::Todo::VERSION");
